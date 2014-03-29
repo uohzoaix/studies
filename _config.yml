@@ -1,6 +1,6 @@
 markdown: rdiscount
 permalink: /:year/:month/:day/:title/
-url: studies
+baseurl: /studies
 author: uohzoaix
 pygments: true
 safe: true
