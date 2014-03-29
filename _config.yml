@@ -1,5 +1,5 @@
 markdown: rdiscount
-baseurl:  /studies
+url:  /
 author: uohzoaix
 pygments: true
 safe: true
