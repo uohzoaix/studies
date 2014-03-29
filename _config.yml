@@ -1,1 +1,2 @@
 baseurl: /studies
+permalink: /:categories/:year/:month/:day/:title/
