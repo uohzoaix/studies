@@ -1,6 +1,6 @@
 markdown: rdiscount
 permalink: /:year/:month/:day/:title/
-url: http://uohzoaix.github.com
+url: http://uohzoaix.github.com/studies
 author: uohzoaix
 pygments: true
 safe: true
