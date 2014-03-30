@@ -145,5 +145,5 @@ private float phraseFreq() throws IOException {
     }  
     return freq;
 }
-{% endhighlight %}</br>
+{% endhighlight %}
 在这个方法可以看到matchLength和slop进行比较了。pq的heap（父类的属性）里面存放的是每个term所在field中的位置和该field属于哪个文档的信息：如heap[0]=d:0 o:0 p:7 c:0表示offset为0的term在dicid为0的文档中的当前查询field中的第7个位置，在该field中该term剩余count数量为0，即freq的大小,heap[1]=d:0 o:1 p:11 c:0。
