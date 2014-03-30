@@ -57,78 +57,84 @@ tags: []
 （7）spellcheck查询：</br>
      	有时候我们希望在搜索的关键词拼写错误的时候能让solr给出正确的关键词提示，这时就可以使用solr的spellcheck功能，启用该功能步骤如下：</br>
 	1.    找到solrconfig.xml文件中的<requestHandler name=”/spell”>，修改spellcheck.dictionary的值，它的值可以为在<searchComponent name=”spellcheck”>中各个spellchecker中的name属性值。如default，wordbreak，jarowinkler，file等等，由于我们的搜索关键词的专业性，这时就需要另外维护一份文件来生成符合我们需求的索引，所以我们这里使用的是file形式的spellchecker，修改sourceLocation为spellings.txt文件的位置，spellings.txt文件就是每一个拼写正确的关键词。这里我们制定spellcheck.dictionary的值为file，在使用该功能时必须将spellcheck,spellckeck.build分别设为on和true，否则solr不会启用该功能，其他的一些参数可以参看http://wiki.apache.org/solr/SpellCheckComponent进行了解，一般使用默认值即可，需要注意的是spellcheck.count这个属性，它表示最终返回多少个拼写正确的关键词。</br>
-	2.    配置好之后，在客户端搜索的时候向后台发送一个/spell查询请求即可，如http://localhost:8080/solr/?qt=/spell&q=关键词。这时如果你的关键词拼写错误，solr就会从spellings.txt文件找到和该关键词类似的并且拼写正确的那些词并返回给QueryResponse，这时可以通过QueryResponse的getSpellCheckResponse方法获取到具体的拼写正确的词，代码如下：</br>
-	SolrQuery checkQuery=new SolrQuery();</br>
-	String checkQuery=SolrServerUtil.getSpellQuery(keyWord);</br>
-   	QueryResponse spellrsp = solrServer.query(checkQuery); // 提交查询条件</br>
-   	SpellCheckResponse checkRsp=spellrsp.getSpellCheckResponse();</br>
-     	List<String> checks=null;</br>
-     	if(checkRsp!=null){</br>
-        		List<Suggestion> suggestions=checkRsp.getSuggestions();</br>
-        		if(suggestions.size()>0&&null!=suggestions){</br>
-           			checks=new ArrayList<String>();</br>
-           			for(Suggestion suggestion:suggestions){</br>
-             			checks=suggestion.getAlternatives();</br>
-           			}</br>
-        		}</br>
-     	}</br>
-     	return checks;</br>
+	2.    配置好之后，在客户端搜索的时候向后台发送一个/spell查询请求即可，如http://localhost:8080/solr/?qt=/spell&q=关键词。这时如果你的关键词拼写错误，solr就会从spellings.txt文件找到和该关键词类似的并且拼写正确的那些词并返回给QueryResponse，这时可以通过QueryResponse的getSpellCheckResponse方法获取到具体的拼写正确的词，代码如下：
+  {% highlight objc %}
+SolrQuery checkQuery=new SolrQuery();
+String checkQuery=SolrServerUtil.getSpellQuery(keyWord);
+QueryResponse spellrsp = solrServer.query(checkQuery); // 提交查询条件
+SpellCheckResponse checkRsp=spellrsp.getSpellCheckResponse();
+List<String> checks=null;
+if(checkRsp!=null){
+    List<Suggestion> suggestions=checkRsp.getSuggestions();
+    if(suggestions.size()>0&&null!=suggestions){
+        checks=new ArrayList<String>();
+        for(Suggestion suggestion:suggestions){
+            checks=suggestion.getAlternatives();
+        }
+    }
+}
+return checks;
      	返回的checks数组就是拼写正确的词的一个列表。</br>
 （8）最相似查询（MoreLikeThis）功能：</br>
-     	在该功能中需要将mlt参数设置为true以启用该功能，并且需要设置相似功能用在哪一个字段上，通过设置mlt.fl可以指定相应的字段使用该功能。mlt.mintf表示搜索的关键词在某条索引中的出现次数小于该值的将忽略，mlt.mindf表示搜索的关键词在整个文档索引中出现次数小于该值的将忽略。mlt.count表示需要返回多少条相似记录。查询时可以：http://localhost:8080/solr/select?q=关键词&mlt=true&mlt.fl=title&mlt.mindf=1&mlt.mintf=1&fl=*,score，这时solr会返回title中和关键词相似的那些记录。获取最终记录的代码如下：</br>
-	SolrQuery mltQuery=new SolrQuery();</br>
-	String mltQuery=SolrServerUtil.mlt(keyWord);</br>
-	QueryResponse mltrsp = solrServer.query(mltQuery); // 提交查询条件</br>
-	SolrDocumentList docs=mltrsp.getResults();</br>
-	SimpleOrderedMap<Object> mlts=(SimpleOrderedMap<Object>)mltrsp.getResponse().get("moreLikeThis");</br>
-	Map<String, String> suggests=null;</br>
-	if(docs.size()>0){</br>
-   		for (SolrDocument doc : docs) {</br>
-     			String sellID = doc.getFieldValue("sellID").toString();</br>
-     			SolrDocumentList mltdocs = (SolrDocumentList)mlts.get(sellID);</br>
-     			if(mltdocs.size()>0){</br>
-        				suggests=new HashMap<String, String>();</br>
-        				for (SolrDocument mltdoc : mltdocs) {</br>
-        					suggests.put(mltdoc.getFieldValue("sellID").toString(),mltdoc.getFieldValue("title").toString());</br>
-             			}</br>
-           			}</br>
-        		}</br>
-     	}</br>
-     	return suggests;</br>
+     	在该功能中需要将mlt参数设置为true以启用该功能，并且需要设置相似功能用在哪一个字段上，通过设置mlt.fl可以指定相应的字段使用该功能。mlt.mintf表示搜索的关键词在某条索引中的出现次数小于该值的将忽略，mlt.mindf表示搜索的关键词在整个文档索引中出现次数小于该值的将忽略。mlt.count表示需要返回多少条相似记录。查询时可以：http://localhost:8080/solr/select?q=关键词&mlt=true&mlt.fl=title&mlt.mindf=1&mlt.mintf=1&fl=*,score，这时solr会返回title中和关键词相似的那些记录。获取最终记录的代码如下：
+{% highlight objc %}
+SolrQuery mltQuery=new SolrQuery();
+String mltQuery=SolrServerUtil.mlt(keyWord);
+QueryResponse mltrsp = solrServer.query(mltQuery); // 提交查询条件
+SolrDocumentList docs=mltrsp.getResults();
+SimpleOrderedMap<Object> mlts=(SimpleOrderedMap<Object>)mltrsp.getResponse().get("moreLikeThis");
+Map<String, String> suggests=null;
+if(docs.size()>0){
+    for (SolrDocument doc : docs) {
+        String sellID = doc.getFieldValue("sellID").toString();
+        SolrDocumentList mltdocs = (SolrDocumentList)mlts.get(sellID);
+     	  if(mltdocs.size()>0){
+            suggests=new HashMap<String, String>();
+        	for (SolrDocument mltdoc : mltdocs) {
+        	   suggests.put(mltdoc.getFieldValue("sellID").toString(),mltdoc.getFieldValue("title").toString());
+            }
+        }
+    }
+}
+return suggests;
+{% endhighlight %}
 （9）facet查询：</br>
-     	Facet查询只针对indexed=true的字段而不是stored=true，facet查询其实就是sql里的group by功能，说到group by，我们就必须为group by提供所要group的字段，比如group by corpID，在solr中可以通过query.addFacetField(“corpID”)实现，在使用facet时必须将facet功能开启（默认关闭）：query.setFacet(true)，其他的一些参数设置如：query.setRows(0)设置返回结果条数，在facet中需要设置为0，query.setFacetSort(“count”)设置返回的结果列表按数量高低排序，query.setFacetLimit(pageSize)设置每次返回的分组数量可用于分页，query.set(FacetParams.FACET_OFFSET,(page==null?0:page-1)*pageSize)设置分组起始位置。如果你需要显示分组后总共有多少组，则需要使用query.setFacetLimit(Integer.MAX_VALUE)来不限制返回的分组数，这样就可以通过SolrServer.query(query).getFacetField(“corpID”).getValues().size()来取得总共的分组数量。但是在分页时我们需要如下操作来存储结果：</br>
-	QueryResponse resultRsp=solrServer.query(query);</br>
-	List<Count> countList = resultRsp.getFacetField("corpID").getValues();</br>
-	Map<Sell, Integer> rmap = new LinkedHashMap<Sell, Integer>();</br>
-	for (Count resultcount : countList) {</br>
-   		if (resultcount.getCount() > 0) {//查出该组中的一个供应产品以显示在页面上</br>
-      			Sell sell = expand(其他参数…, resultcount.getName()).get(0);</br>
-      			rmap.put(sell, (int) resultcount.getCount());</br>
-   		}</br>
-	}</br>
-	return rmap;</br>
+     	Facet查询只针对indexed=true的字段而不是stored=true，facet查询其实就是sql里的group by功能，说到group by，我们就必须为group by提供所要group的字段，比如group by corpID，在solr中可以通过query.addFacetField(“corpID”)实现，在使用facet时必须将facet功能开启（默认关闭）：query.setFacet(true)，其他的一些参数设置如：query.setRows(0)设置返回结果条数，在facet中需要设置为0，query.setFacetSort(“count”)设置返回的结果列表按数量高低排序，query.setFacetLimit(pageSize)设置每次返回的分组数量可用于分页，query.set(FacetParams.FACET_OFFSET,(page==null?0:page-1)*pageSize)设置分组起始位置。如果你需要显示分组后总共有多少组，则需要使用query.setFacetLimit(Integer.MAX_VALUE)来不限制返回的分组数，这样就可以通过SolrServer.query(query).getFacetField(“corpID”).getValues().size()来取得总共的分组数量。但是在分页时我们需要如下操作来存储结果：
+{% highlight objc %}	
+QueryResponse resultRsp=solrServer.query(query);
+List<Count> countList = resultRsp.getFacetField("corpID").getValues();
+Map<Sell, Integer> rmap = new LinkedHashMap<Sell, Integer>();
+for (Count resultcount : countList) {
+    if (resultcount.getCount() > 0) {//查出该组中的一个供应产品以显示在页面上
+        Sell sell = expand(其他参数…, resultcount.getName()).get(0);
+        rmap.put(sell, (int) resultcount.getCount());
+    }
+}
+return rmap;
+{% endhighlight %}
 	值得注意的是expand方法，该方法的目的是从每组结果中获取第一个对象以显示在页面上，resultCount.getName()就是获取该组的corpID值，再去使用该corpID到solr中去查出该corpID的所有信息并get(0)获取第一个对象，resultCount.getCount()是获取该组的数量。通过这样操作之后就可以实现分组效果并在每组下显示诸如“该组共有多少个供求信息”的提示信息了。
 	到这里还没完，我们还需要点击提示信息的时候显示出该组的全部供求信息，当然这个就比较简单了，直接拿corpID到solr中去查并封装结果列表返回即可。</br>
 solr的fieldType初始化流程：</br>
-Lucene41PostingReader类中的docDeltaBuffer属性用来存储每个term在所有doc中的偏移量，比如“价格”这个词在doc1，3，4，7，8，9这几个文档中出现，那么该属性的值为0，2，1，3，1，1.该值由方法readVIntBlock获得：</br>
-static void readVIntBlock(IndexInput docIn, int[] docBuffer,
-      int[] freqBuffer, int num, boolean indexHasFreq) throws IOException {</br>
-    if (indexHasFreq) {</br>
-      for(int i=0;i<num;i++) {</br>
-        final int code = docIn.readVInt();</br>
-        docBuffer[i] = code >>> 1;</br>
-        if ((code & 1) != 0) {</br>
-          freqBuffer[i] = 1;</br>
-        } else {</br>
-          freqBuffer[i] = docIn.readVInt();</br>
-        }</br>
-      }</br>
-    } else {</br>
-      for(int i=0;i<num;i++) {</br>
-        docBuffer[i] = docIn.readVInt();</br>
-      }</br>
-    }</br>
-  }</br>
+Lucene41PostingReader类中的docDeltaBuffer属性用来存储每个term在所有doc中的偏移量，比如“价格”这个词在doc1，3，4，7，8，9这几个文档中出现，那么该属性的值为0，2，1，3，1，1.该值由方法readVIntBlock获得：
+{% highlight objc %}
+static void readVIntBlock(IndexInput docIn, int[] docBuffer, int[] freqBuffer, int num, boolean indexHasFreq) throws IOException {
+    if (indexHasFreq) {
+        for(int i=0;i<num;i++) {
+            final int code = docIn.readVInt();
+            docBuffer[i] = code >>> 1;
+            if ((code & 1) != 0) {
+                freqBuffer[i] = 1;
+            } else {
+                freqBuffer[i] = docIn.readVInt();
+            }
+        }
+    } else {
+        for(int i=0;i<num;i++) {
+            docBuffer[i] = docIn.readVInt();
+        }
+    }
+}
+{% endhighlight %}
 这里的docIn参数指示的是.doc文件，该文件存储的是term存在于哪些doc中，其格式如：
 价格：1 3 4 7 8 9，这里的num就为6，每次docIn.readVInt()就会读取到1，3，4，7，8，9.</br>
 
