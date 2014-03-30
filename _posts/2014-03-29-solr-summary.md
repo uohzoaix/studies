@@ -47,11 +47,13 @@ tags: []
 问题：什么情况下需要用到自定义UpdateRequestProcessor？</br>
      	在需要根据指定的值生成另外的值并且需要将生成的值也做进索引则可以使用它来实现。在不需要另外生成值的情况下就不需要使用自定义的processor了，但是内容不是存在数据库而是存在各类文件中时，只需要提供<processor class=”solr.LogUpdateProcessorFactory”/><processor class=”solr.RunUpdateProcessorFactory”/>，并且解析各类文件将每行数据封装为一个SolrInputDocument后SolrServer.add(solrInputDocument)即可。</br>
 （6）竞价排名查询：</br>
-     	在solrconfig.xml文件的<requestHandler name=”/elevate”>配置中的<lst name=”defaults”>下加上<bool name=”enableElevation”>true</bool><bool name=”forceElevation”>true</bool>以开启竞价功能，然后在conf目录下的elevate.xml文件中加上</br>
-	<query text=”xxx:xxx”></br>
-		<doc id=”1”/></br>
-		<doc id=”2”/></br>
-	</query></br>
+     	在solrconfig.xml文件的<requestHandler name=”/elevate”>配置中的<lst name=”defaults”>下加上<bool name=”enableElevation”>true</bool><bool name=”forceElevation”>true</bool>以开启竞价功能，然后在conf目录下的elevate.xml文件中加上：
+{% highlight objc %}
+	<query text=”xxx:xxx”>
+		<doc id=”1”/>
+		<doc id=”2”/>
+	</query>
+  {% endhighlight %}
 	这样当搜索xxx:xxx（如all:你好）时id为1和2的doc就会显示在前面（这里的id必须是schema.xml文件中配置的<uniqueKey>值）。</br>
 	elevate.xml文件可以配置多个竞价规则。</br>
 （7）spellcheck查询：</br>
