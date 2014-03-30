@@ -2,7 +2,7 @@
 layout: post
 title: "solr之Slop查询分析"
 description: "solr的slop查询代码分析"
-category: essay
+category: solr
 tags: []
 ---
 
