@@ -1,149 +1,30 @@
 ---
 layout: post
-title: "solr之Slop查询分析"
-description: "solr的slop查询代码分析"
-category: essay
+title: "推荐系统算法——最大似然比"
+category: 
+- 推荐系统
 tags: []
 ---
 
 
 
-在查询如：title:"市场 价格"~5的时候，意思是title包括市场和价格并且市场和价格之前的距离不能大于5.如果查询title:"市场 价格 市场"~5，说明市场后面有价格，价格后面还要有市场，否则没有结果。</br>
-主要代码如下：</br>
-{% highlight objc %}
-protected void search(List<AtomicReaderContext> leaves, Weight weight, Collector collector) throws IOException {
-    // TODO: should we make this threaded...?  the Collector could be sync'd?
-    // always use single thread:
-    for (AtomicReaderContext ctx : leaves) { // search each subreader
-        collector.setNextReader(ctx);
-        Scorer scorer = weight.scorer(ctx, !collector.acceptsDocsOutOfOrder(), true, ctx.reader().getLiveDocs());
-        if (scorer != null) {
-            scorer.score(collector);
-        }
-    }
-}
-{% endhighlight %}
-进入PhraseWeight.score()方法：
-{% highlight objc %}
-public Scorer scorer(AtomicReaderContext context, boolean scoreDocsInOrder,boolean topScorer, Bits acceptDocs) throws IOException {
-    assert !terms.isEmpty();
-    final AtomicReader reader = context.reader();
-    final Bits liveDocs = acceptDocs;
-    PostingsAndFreq[] postingsFreqs = new PostingsAndFreq[terms.size()];
-    final Terms fieldTerms = reader.terms(field);
-    if (fieldTerms == null) {
-        return null;
-    }
-    // Reuse single TermsEnum below:
-    final TermsEnum te = fieldTerms.iterator(null);
-    for (int i = 0; i < terms.size(); i++) {
-        final Term t = terms.get(i);
-        //这里的state是根据该term是否在索引中存在生成的
-        final TermState state = states[i].get(context.ord);
-        //如果该term在索引中不存在，则会return null，说明在该种查询语法中每个term都必须出现，即使AND的关系
-        if (state == null) { /* term doesnt exist in this segment */
-            assert termNotInReader(reader, t): "no termstate found but term exists in reader";
-            return null;
-        }
-        te.seekExact(t.bytes(), state);//这里是具体的在索引文件里进行搜索的逻辑
-        DocsAndPositionsEnum postingsEnum = te.docsAndPositions(liveDocs, null, DocsEnum.FLAG_NONE);
-        // PhraseQuery on a field that did not index
-        // positions.
-        if (postingsEnum == null) {
-            assert te.seekExact(t.bytes(), false) : "termstate found but no term exists in reader";
-            // term does exist, but has no positions
-            throw new IllegalStateException("field \"" + t.field() + "\" was indexed without position data; cannot run PhraseQuery (term=" + t.text() + ")");
-        }
-        postingsFreqs[i] = new PostingsAndFreq(postingsEnum, te.docFreq(), positions.get(i).intValue(), t);
-    }
-    // sort by increasing docFreq order
-    if (slop == 0) {
-        ArrayUtil.mergeSort(postingsFreqs);
-    }
-    //如果slop为0，即查询语句中的~后面的数字，则返回ExactPhraseScorer，否则返回SloppyPhraseScorer
-    if (slop == 0) {  // optimize exact case
-        ExactPhraseScorer s = new ExactPhraseScorer(this, postingsFreqs, similarity.exactSimScorer(stats, context));
-        if (s.noDocs) {
-            return null;
-        } else {
-            return s;
-        }
-    } else {
-        return new SloppyPhraseScorer(this, postingsFreqs, slop, similarity.sloppySimScorer(stats, context));
-    }
-}
-{% endhighlight %}
-接着进入Scorer.score()方法中：
-{% highlight objc %}
-/** Scores and collects all matching documents.
-   * @param collector The collector to which all matching documents are passed.
-   */
-public void score(Collector collector) throws IOException {
-    collector.setScorer(this);
-    int doc;
-    while ((doc = nextDoc()) != NO_MORE_DOCS) {
-        collector.collect(doc);
-    }
-}
-在这里主要是nextDoc()方法，进入SloppyPhraseScorer.nextDoc()方法：
-public int nextDoc() throws IOException {
-    return advance(max.doc);
-}
-public int advance(int target) throws IOException {
-    sloppyFreq = 0.0f;
-    if (!advanceMin(target)) {
-        return NO_MORE_DOCS;
-    } 
-    boolean restart=false;
-    while (sloppyFreq == 0.0f) {
-        while (min.doc < max.doc || restart) {
-            restart = false;
-            if (!advanceMin(max.doc)) {
-                return NO_MORE_DOCS;
-            }
-        }
-        // found a doc with all of the terms
-        sloppyFreq = phraseFreq(); // check for phrase
-        restart = true;
-    }
-    // found a match
-    return max.doc;
-}
-private float phraseFreq() throws IOException {
-    if (!initPhrasePositions()) {
-        return 0.0f;
-    }
-    float freq = 0.0f;
-    numMatches = 0;
-    PhrasePositions pp = pq.pop();
-    System.out.println(pp+"---"+end);
-    int matchLength = end - pp.position;
-    int next = pq.top().position;
-    while (advancePP(pp)) {
-        if (hasRpts && !advanceRpts(pp)) {
-            break; // pps exhausted
-        }
-        if (pp.position > next) { // done minimizing current match-length
-            if (matchLength <= slop) {
-                  freq += docScorer.computeSlopFactor(matchLength); // score match
-                  numMatches++;
-            } 
-            pq.add(pp);
-            pp = pq.pop();
-            next = pq.top().position;
-            matchLength = end - pp.position;
-        } else {
-            int matchLength2 = end - pp.position;
-            if (matchLength2 < matchLength) {
-                matchLength = matchLength2;
-            }
-        }
-    }
-    if (matchLength <= slop) {
-        freq += docScorer.computeSlopFactor(matchLength); // score match
-        numMatches++;
-    }  
-    return freq;
-}
-{% endhighlight %}
-在这个方法可以看到matchLength和slop进行比较了。pq的heap（父类的属性）里面存放的是每个term所在field中的位置和该field属于哪个文档的信息：如heap[0]=d:0 o:0 p:7 c:0表示offset为0的term在dicid为0的文档中的当前查询field中的第7个位置，在该field中该term剩余count数量为0，即freq的大小,heap[1]=d:0 o:1 p:11 c:0。
+
+
+如果需要计算两个用户之间的相似度，我们自然会想到去计算这两个用户感兴趣的物品之间的相似度。但是计算用户感兴趣物品之间的相似度时，如何使这个相似度能最大最准确的反映用户之间的相似度呢？下面描述的这种方式在众多计算对数似然比的算法中被称为是最佳的。</br></br>
+首 先将两个用户共同感兴趣的物品的数量记为intersection，接着分别将两个用户中除了共同感兴趣的物品之外的物品数量记为beside1、 beside2，最后将两个用户都不感兴趣的物品数量记为beside12.比如推荐系统中物品编号为1,2,3,4,5,6，用户1对1,2,3感兴 趣，用户2对2，4感兴趣，那么intersection为1（只有一个2），beside1为2（有1,3），beside2为 1（4），beside12为2（5,6）。</br></br>
+有了这几个参数之后，这时候就需要根据这些参数来计算对数似然比了。计算步骤如下（行熵和列熵的计算可以倒换）：</br></br>
+  1. 计 算行熵（熵的概念：http://baike.baidu.com.cn/view/795686.htm）： (intersection+beside2)log(intersection+beside2)- intersection log(intersection)- beside2log(beside2)+ (beside12+beside1)log(beside12+beside1)- beside12log(beside12)- beside1log(beside1)。以上面的例子：行熵=2log2-1log1-1log1+4log4-2log2-2log2。
+</br></br>
+  2. 计 算列熵：(intersection+beside1)log(intersection+beside1)- intersection log(intersection)- beside1log(beside1)+ (beside12+beside2)log(beside12+beside2)- beside12log(beside12)- beside2log(beside2)。以上面为例子：列熵=3log3-1log1-2log2+4log4-2log2-2log2。
+</br></br>
+  3. 计 算矩阵熵： （intersection+beside1+beside2+beside12）log(intersection+beside1+beside2+beside12)-(intersection)log(intersecion)-(beside1)log(beside1)-(beside2)log(beside2)-(beside12)log(beside12)。 以上面为例子：矩阵熵=6log6-1log1-2log2-1log1-2log2。
+</br></br>
+  4. 如果行熵+列熵>矩阵熵则对数似然比为0.0（称为舍入错误），否则返回似然比=2*（矩阵熵-行熵-列熵）。
+</br></br>
+最 后获得的对数似然比其实可以用来对两个用户的相似度进行评估了，但是我们通常将相似度的值定义为0.0-1.0（0.0表示两个用户完全就是牛嘴和马 头，1.0表示两个用户是完美匹配，性别、年龄、身高等属性都相同，可称为好基友）。所以我们将对数似然比的值重新进行定义为：似然比/1.0+似然比 （这样不会因为重新定义而改变原对数似然比的反映程度）。最终这个值可以用来反映用户之间的相似程度。</br></br>
+除了计算 两个用户之间的相似程度之外，推荐系统中往往会涉及到基于内容的推荐方式，即通过两个物品之间的相似程度来进行推荐。计算两个物品之间的相似度和用户之间 的相似度算法是一样的，不过计算的参数是要针对于用户了：如同时对两个物品感兴趣的用户数量，对两个物品都不感兴趣的用户数量等。</br></br>
+有了相似度我们就可以在我们的网站上为用户进行推荐了，比如我们要向当前用户推荐一些他可能会感兴趣的物品，这时我们有两种方式进行推荐：</br></br>
+  1. 可以将该用户感兴趣的物品逐一和其他物品进行计算相似度，如果相似度大于0.5则放入推荐箱（这时如果有推荐数量限制，则可以选择相似度最高的几个进行推荐）。</br></br>
+  2. 将该用户和其他用户逐一进行计算相似度，如果相似度大于0.5（当然你也可以使用其他threshold已获得更佳的推荐）那么将其他用户的所有感兴趣的物品都推荐给该用户。
+</br></br>
+可 想而知，方式1的推荐方式会好一点。然而方式2在微博中的可能感兴趣的人中会有比较好的推荐效果。方式1还可以应用在某用户购买了某个物品后再向用户推荐 该物品的附带产品的情景中，比如京东商城的组合推荐功能。京东上的购买该物品的用户还购买了的功能可以简单的查下数据库就能给用户推荐一些物品，但是此种 做法推荐的效果不佳，往往会推荐一些毫无关系的物品，所以我们也需要计算物品之间的相似度后再进行推荐。
