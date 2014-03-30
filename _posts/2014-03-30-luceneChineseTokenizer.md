@@ -13,25 +13,26 @@ tags: []
 三个最主要的方法：
 {% highlight objc %}
 private final void push(char c) {</br>
-  //length==0表明当前分词操作只读取了一个字符，start指示该字符在input中的位置，由于分词时offset++了，这时需要-1才是正确的start值</br>
-  7. if (length == 0) start = offset-1;            // start of token</br>
-  //length指示当前已分词的长度</br>
-  buffer[length++] = Character.toLowerCase(c);  // buffer it</br>
+    //length==0表明当前分词操作只读取了一个字符，start指示该字符在input中的位置，由于分词时offset++了，这时需要-1才是正确的start值</br>
+    7. if (length == 0) start = offset-1;            // start of token</br>
+    //length指示当前已分词的长度</br>
+    buffer[length++] = Character.toLowerCase(c);  // buffer it</br>
 }
-{% endhighlight %}</br></br>
+{% endhighlight %}
 
+{% highlight objc %}
 private final boolean flush() {</br>
-        if (length>0) {</br>
-            //System.out.println(new String(buffer, 0, length));</br>
-          //该词的内容</br>
-          termAtt.setTermBuffer(buffer, 0, length);</br>
-          //该词的位置信息：起始和结束</br>
-          offsetAtt.setOffset(correctOffset(start), correctOffset(start+length));</br>
-          return true;</br>
-        }</br>
-        else</br>
-            return false;</br></br>
-}</br></br>
+    if (length>0) {</br>
+        //System.out.println(new String(buffer, 0, length));</br>
+        //该词的内容</br>
+        termAtt.setTermBuffer(buffer, 0, length);</br>
+        //该词的位置信息：起始和结束</br>
+        offsetAtt.setOffset(correctOffset(start), correctOffset(start+length));</br>
+            return true;</br>
+    }</br>
+    else</br>
+        return false;</br></br>
+}{% highlight objc %}
 
 public boolean incrementToken() throws IOException {</br>
         clearAttributes();</br>
