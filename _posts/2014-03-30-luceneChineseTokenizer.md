@@ -2,14 +2,16 @@
 layout: post
 title: "lucene之ChineseTokenizer解析"
 description: "lucene自带的中文分词ChineseTokenizer代码分析"
-category: essay
+category: 
+- lucne
+- 分词
 tags: []
 ---
 
 
 
 三个最主要的方法：</br></br>
-{% highlight lucene %}
+{% highlight objc %}
 private final void push(char c) {</br>
         //length==0表明当前分词操作只读取了一个字符，start指示该字符在input中的位置，由于分词时offset++了，这时需要-1才是正确的start值</br>
        7. if (length == 0) start = offset-1;            // start of token</br>
