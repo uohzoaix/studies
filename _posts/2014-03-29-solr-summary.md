@@ -74,6 +74,7 @@ if(checkRsp!=null){
     }
 }
 return checks;
+{% endhighlight %}
      	返回的checks数组就是拼写正确的词的一个列表。</br>
 （8）最相似查询（MoreLikeThis）功能：</br>
      	在该功能中需要将mlt参数设置为true以启用该功能，并且需要设置相似功能用在哪一个字段上，通过设置mlt.fl可以指定相应的字段使用该功能。mlt.mintf表示搜索的关键词在某条索引中的出现次数小于该值的将忽略，mlt.mindf表示搜索的关键词在整个文档索引中出现次数小于该值的将忽略。mlt.count表示需要返回多少条相似记录。查询时可以：http://localhost:8080/solr/select?q=关键词&mlt=true&mlt.fl=title&mlt.mindf=1&mlt.mintf=1&fl=*,score，这时solr会返回title中和关键词相似的那些记录。获取最终记录的代码如下：
