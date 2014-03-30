@@ -2,7 +2,8 @@
 layout: post
 title: "solr使用总结"
 description: "对solr的各种使用进行总结"
-category: essay
+category: 
+- solr
 tags: []
 ---
 

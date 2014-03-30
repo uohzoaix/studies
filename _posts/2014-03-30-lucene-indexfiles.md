@@ -2,7 +2,9 @@
 layout: post
 title: "lucene索引文件解析"
 description: "lucene的各个索引文件形成解析"
-category: essay
+category: 
+- lucene
+- 索引文件
 tags: []
 ---
 
