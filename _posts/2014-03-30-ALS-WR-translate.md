@@ -33,8 +33,7 @@ Lemp(R,U,M) =1/n X(i,j)2IL2(rij , ui,mj),其中i代表已知评分集合的索�
 ##3.解决方法</br></br>
 在此节中，我们描述了一个迭代算法（ALSWR）来解决低秩近似值问题，接着会实现基于并行Matlab平台的并行实现。</br></br>
 ###3.1ALSWR</br></br>
-       由于评分矩阵同时包含信号和脏数据，重要的是移除脏数据和使用恢复的信号来预测失去的评分。奇异值分解 (SVD，http://zh.wikipedia.org/zh-cn/%E5%A5%87%E5%BC%82%E5%80%BC%E5%88%86 %E8%A7%A3)是一种估算原生用户-电影评分矩阵R的方法，它使用两个k排名的矩阵˜R = UT ×M的结果作为估算标准。由SVD给出的解决方案最小化Frobenious norm(http://mathworld.wolfram.com/FrobeniusNorm.html)，该方案与在R的所有元素上最小化RMSE是等效的。然而，由于在矩阵R中有很多的空值，标准的SVD算法不能找到U和M矩阵。
-       在本文中，我们使用ALS来解决低秩近似矩阵分解问题的步骤如下：</br></br>
+由于评分矩阵同时包含信号和脏数据，重要的是移除脏数据和使用恢复的信号来预测失去的评分。奇异值分解 (SVD，http://zh.wikipedia.org/zh-cn/%E5%A5%87%E5%BC%82%E5%80%BC%E5%88%86 %E8%A7%A3)是一种估算原生用户-电影评分矩阵R的方法，它使用两个k排名的矩阵˜R = UT ×M的结果作为估算标准。由SVD给出的解决方案最小化Frobenious norm(http://mathworld.wolfram.com/FrobeniusNorm.html)，该方案与在R的所有元素上最小化RMSE是等效的。然而，由于在矩阵R中有很多的空值，标准的SVD算法不能找到U和M矩阵。在本文中，我们使用ALS来解决低秩近似矩阵分解问题的步骤如下：</br></br>
 
   1. 使用指定电影的平均得分作为矩阵M的第一行，余下的行值使用小的随机值来填充。</br>
   2. 使用squared errors和的最小值来填充U矩阵。</br>
