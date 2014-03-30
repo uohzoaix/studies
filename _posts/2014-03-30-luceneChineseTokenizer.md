@@ -32,7 +32,8 @@ private final boolean flush() {</br>
     }</br>
     else</br>
         return false;</br></br>
-}{% highlight objc %}
+}
+{% endhighlight %}
 
 public boolean incrementToken() throws IOException {</br>
         clearAttributes();</br>
