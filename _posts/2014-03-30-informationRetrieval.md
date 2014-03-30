@@ -20,8 +20,8 @@ C                   D
 一般情况下，对于一个用户未曾选择或评论的item，推荐引擎推荐的结果有4种，即系统推荐给用户且用户很like，系统推荐给用户但用户hate,用户like但系统没有推荐给用户，用户hate且系统也没有推荐。如下图：
 {% highlight objc %}
 用户喜好            系统推荐            系统没有推荐
-Like                 A                       B
-Hate                 C                       D
+Like                 A                   B
+Hate                 C                   D
 {% endhighlight %}
 这 里用户喜欢的item有A和B，不喜欢的item有C和D，使用推荐系统向该用户推荐后结果为A和C，所以该推荐的准确率=A/(A+B)，召回率=A /(A+C)，淘汰率=B/(B+D)。所以求系统中所有用户的准确率和召回率的平均值我们就可以使用Fn-measure来评估该推荐引擎的效率了。</br></br>
 
