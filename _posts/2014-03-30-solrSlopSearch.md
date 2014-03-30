@@ -8,8 +8,8 @@ tags: []
 
 
 
-在查询如：title:"市场 价格"~5的时候，意思是title包括市场和价格并且市场和价格之前的距离不能大于5.如果查询title:"市场 价格 市场"~5，说明市场后面有价格，价格后面还要有市场，否则没有结果。</br></br>
-主要代码如下：</br></br>
+在查询如：title:"市场 价格"~5的时候，意思是title包括市场和价格并且市场和价格之前的距离不能大于5.如果查询title:"市场 价格 市场"~5，说明市场后面有价格，价格后面还要有市场，否则没有结果。</br>
+主要代码如下：</br>
 {% highlight objc %}
 protected void search(List<AtomicReaderContext> leaves, Weight weight, Collector collector) throws IOException {
     // TODO: should we make this threaded...?  the Collector could be sync'd?
@@ -22,7 +22,7 @@ protected void search(List<AtomicReaderContext> leaves, Weight weight, Collector
         }
     }
 }
-{% endhighlight %}</br>
+{% endhighlight %}
 进入PhraseWeight.score()方法：
 {% highlight objc %}
 public Scorer scorer(AtomicReaderContext context, boolean scoreDocsInOrder,boolean topScorer, Bits acceptDocs) throws IOException {
@@ -72,7 +72,7 @@ public Scorer scorer(AtomicReaderContext context, boolean scoreDocsInOrder,boole
         return new SloppyPhraseScorer(this, postingsFreqs, slop, similarity.sloppySimScorer(stats, context));
     }
 }
-{% endhighlight %}</br>
+{% endhighlight %}
 接着进入Scorer.score()方法中：
 {% highlight objc %}
 /** Scores and collects all matching documents.
