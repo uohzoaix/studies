@@ -4,5 +4,5 @@ baseurl: /studies
 author: uohzoaix
 pygments: true
 safe: true
-paginate: 12
+paginate: 15
 auto: true
