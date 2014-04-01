@@ -47,7 +47,7 @@ public static FileSystem get(URI uri, Configuration conf) throws IOException {
     	}
     	return CACHE.get(uri, conf);
 }
-
+{% highlight objc %}
 private static FileSystem createFileSystem(URI uri, Configuration conf) throws IOException {
     	Class<> clazz=conf.getClass(“fs.”+uri.getSchema()+”.impl”,null);
 	LOG.debug(“Creating filesystem for ”+url);
@@ -58,7 +58,7 @@ private static FileSystem createFileSystem(URI uri, Configuration conf) throws I
 	fs.initialize(uri,conf);
 	return fs;
 }
-
+{% endhighlight %}
 上面的源码清楚的表示了如何实例化文件系统，其中fs.${schema}.impl.disable.cache表示是否缓存该文件系统如果不缓存每次新作业运行都会调用createFileSystem方法类实例化文件系统，如果缓存则可从cache中取，该值默认为true。我们来看看Cache的get方法：
 {% highlight objc %}
 FileSystem get(URI uri, Configuration conf) throws IOException{
