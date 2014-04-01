@@ -23,6 +23,7 @@ public static FileSystem get(Configuration conf) throws IOException {
 public static URI getDefaultUri(Configuration conf) {
 	return URI.create(fixName(conf.get(FS_DEFAULT_NAME_KEY, "file:///")));
 }
+{% highlight objc %}
 /** Returns the FileSystem for this URI's scheme and authority.  The scheme
    * of the URI determines a configuration property name,
    * <tt>fs.<i>scheme</i>.class</tt> whose value names the FileSystem class.
@@ -47,12 +48,13 @@ public static FileSystem get(URI uri, Configuration conf) throws IOException {
     	}
     	return CACHE.get(uri, conf);
 }
+{% endhighlight %}
 {% highlight objc %}
 private static FileSystem createFileSystem(URI uri, Configuration conf) throws IOException {
-    	Class<> clazz=conf.getClass(“fs.”+uri.getSchema()+”.impl”,null);
-	LOG.debug(“Creating filesystem for ”+url);
+    	Class<> clazz=conf.getClass("fs."+uri.getSchema()+".impl",null);
+	LOG.debug("Creating filesystem for "+url);
 	if(clazz==null){
-		throw new IOException(“No FileSystem for schema:”+url.getSchema());
+		throw new IOException("No FileSystem for schema:"+url.getSchema());
 	}
 	FileSystem fs=(FileSystem)ReflectionUtils.newInstance(clazz,conf);
 	fs.initialize(uri,conf);
