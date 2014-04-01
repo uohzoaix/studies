@@ -1437,7 +1437,8 @@ public Collection<ContentStream> getContentStreams() throws IOException {
     return ClientUtils.toContentStreams(getXML(), ClientUtils.TEXT_XML);
 
   }
-
+{% endhighlight %}
+{% highlight objc %}
 public String getXML() throws IOException {
 
     StringWriter writer = new StringWriter();
