@@ -205,6 +205,7 @@ version&nbsp;&nbsp;operator&nbsp;&nbsp;blockid&nbsp;&nbsp;generationStamp&nbsp;&
 
 ###DataNode对dfsclient的响应
 DataNode负责与客户端代码的通信协议交互的逻辑，主要是DataXceiver的readBlock方法实现的：
+{% highlight objc %}
 private void readBlock(DataInputStream in) throws IOException {  
     //读取指令  
     long blockId = in.readLong(); 
