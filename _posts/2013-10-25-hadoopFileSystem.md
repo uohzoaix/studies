@@ -60,7 +60,7 @@ private static FileSystem createFileSystem(URI uri, Configuration conf) throws I
 }
 
 上面的源码清楚的表示了如何实例化文件系统，其中fs.${schema}.impl.disable.cache表示是否缓存该文件系统如果不缓存每次新作业运行都会调用createFileSystem方法类实例化文件系统，如果缓存则可从cache中取，该值默认为true。我们来看看Cache的get方法：
-{% highlight objc %}
+
 FileSystem get(URI uri, Configuration conf) throws IOException{
       	Key key = new Key(uri, conf);
       	FileSystem fs = null;
@@ -86,13 +86,13 @@ FileSystem get(URI uri, Configuration conf) throws IOException{
         		return fs;
       	}
 }
-{% endhighlight %}
+
 代码中使用同步快来获取文件系统，如果缓存中存在则直接返回缓存中的，如果不存在则重新去获取锁防止多线程影响去创建文件系统，可是在当
-{% highlight objc %}
+
 synchronized (this) {
         fs = map.get(key);
-      }
-{% endhighlight %}
+}
+
 锁释放的时候线程有可能会创建了文件系统，所以在获得锁之后需要FileSystem oldfs = map.get(key);检查是否已经实例化过了文件系统。</br>
 在每次作业开始获取文件系统之前hadoop需要将之前作业实例化出来的各种文件系统全部close掉也释放资源，代码如下：
 {% highlight objc %}
