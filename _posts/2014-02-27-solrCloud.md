@@ -88,11 +88,8 @@ if (command != null && DataImporter.ABORT_CMD.equals(command)) {
 }
 {% endhighlight %}
 处理器工厂创建处理器方法：
-
-public UpdateRequestProcessor createProcessor(SolrQueryRequest req,
-
-                                                SolrQueryResponse rsp)
-
+{% highlight objc %}
+public UpdateRequestProcessor createProcessor(SolrQueryRequest req,SolrQueryResponse rsp)
   {
 
     UpdateRequestProcessor processor = null;
@@ -110,8 +107,7 @@ public UpdateRequestProcessor createProcessor(SolrQueryRequest req,
 
 
     for (int i = chain.length-1; i>=0; i--) {
-
-//通过从后向前的方式进行创建，即最开始创建RunUpdateProcessor，接着DistributedUpdateProcessor，最后才是LogUpdateProcessor
+        //通过从后向前的方式进行创建，即最开始创建RunUpdateProcessor，接着DistributedUpdateProcessor，最后才是LogUpdateProcessor
 
       UpdateRequestProcessorFactory factory = chain[i];
 
@@ -135,22 +131,13 @@ public UpdateRequestProcessor createProcessor(SolrQueryRequest req,
 
         }
 
-      }
-
-
-
-//getInstance方法的第三个参数指的是该处理器的next即下一个处理器，这样就形成了一条链了
-
+      }//getInstance方法的第三个参数指的是该处理器的next即下一个处理器，这样就形成了一条链了
       processor = factory.getInstance(req, rsp, last);
 
       last = processor == null ? last : processor;
 
-    }
-
-//这里返回最后一个处理器即LogUpdateProcessor，它的next是DistributedUpdateProcessor，DistributedUpdateProcessor的next是RunUpdateProcessor
-
+    }//这里返回最后一个处理器即LogUpdateProcessor，它的next是DistributedUpdateProcessor，DistributedUpdateProcessor的next是RunUpdateProcessor
     return last;
-
   }
-
+{% endhighlight %}
 
