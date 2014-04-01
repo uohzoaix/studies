@@ -11,11 +11,13 @@ tags: []
 
 
 首先来看看FileSystem这个类，在hadoop运行时hadoop需要知道你到底使用的是哪种文件系统，至此hadoop支持多种文件系统，有：LocalFileSystem，DistributedFileSystem，S3FileSystem，HftpFileSystem，InMemroryFileSystem（这几种均可通过配置core-site.xml文件来设定特定的格式），在hadoop运行开始，我们需要提供运行的输入和输出目录，而hadoop并不知道这些文件是存在哪里，到底是在本地还是在其他节点或是其他机架上，而我们往往需要配置core-site.xml文件的fs.default.name=hdfs://xx:xx（该值默认为file:///即本地模式），在作业运行时hadoop会读取该配置项并且将值构造为一个URI并取出其shema，此处为hdfs，获取到具体的schema后即可通过读取core-site.xml中的fs.${schema}.impl获取具体的文件系统格式了，源码如下：
-
+{% highlight objc %}
 /** Returns the configured filesystem implementation.*/
 public static FileSystem get(Configuration conf) throws IOException {
 	return get(getDefaultUri(conf), conf);
 }
+{% endhighlight %}
+{% highlight objc %}
 /** Get the default filesystem URI from a configuration.
    * @param conf the configuration to access
    * @return the uri of the default filesystem
@@ -23,6 +25,7 @@ public static FileSystem get(Configuration conf) throws IOException {
 public static URI getDefaultUri(Configuration conf) {
 	return URI.create(fixName(conf.get(FS_DEFAULT_NAME_KEY, "file:///")));
 }
+{% endhighlight %}
 {% highlight objc %}
 /** Returns the FileSystem for this URI's scheme and authority.  The scheme
    * of the URI determines a configuration property name,
