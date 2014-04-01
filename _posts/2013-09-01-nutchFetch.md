@@ -1,0 +1,32 @@
+---
+layout: post
+title: "nutch的数据抓取流程"
+category: 
+- nutch
+tags: []
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+在nutch2.2中，数据抓取有以下几个步 骤：inject，generate，fetch，parse，updatedb，solrindex，分别对应API中的 InjectorJob，GeneratorJob，FetcherJob，ParserJob，DbUpdaterJob，SolrIndexerJob 几个类。</br></br>
+inject主要是为抓取做一些准备工作：初始化NutchJob，设置mapper和reducer等，并且数据存储方式也会在此阶段进行初始化，比如如果配置的是以sql方式存储，则数据库和相应的表结构会在这个阶段进行创建（使用sqlbuilder工具实现）。参数设置完成之后即可将NutchJob交给hadoop处理了，处理过程中会首先调用setup(Context context)方法，该方法主要是初始化URLNormalizers和URLFilters等处理url的过滤器，比如RegexURLNormalizer和RegexURLFilter，接着job会调用map(LongWritable key, Text value, Context context)方法来进行hadoop的map操作，在该方法中首先会解析配置文件所配置的各个url，通过阅读源码发现这里还解析了两个参数：nutch.score和nutch.fetchInterval，前一个参数顾名思义就知道它是设定当前url的分数的，即排名情况，后一个参数是设定该url的抓取间隔。接着会使用各个URLNormalizers和URLFilters 来对url进行格式化，比如RegexURLNormalizer和RegexURLFilter会读取配置文件配置的正则规则来获取匹配该正则规则的 url和它的伙伴们。map操作完成接着就去执行hadoop的reduce操作，该操作就没啥好讲了。</br></br>
+通过分析得知在inject阶段nutch并没有真正接触到url里的内容，只是收集各个url以便后面步骤使用。</br></br>
+generate 阶段首先也是初始化NutchJob，设置mapper和reducer等参数，这里的mapper和reducer分别为 GeneratorMapper和GeneratorReducer，这个阶段的map操作主要是过滤和规则化url，比如会检查该url是否有 generate标识，如果有则过滤掉；如果当前时间没有到该url的fetch时间则也会过滤掉。所以该阶段的工作就是讲url进行再次的过滤然后交给 fetch阶段。</br></br>
+fetch阶段主要来看看FetcherMapper 和FetcherReducer两个类，FetcherMapper的map方法讲url对应的一个webpage对象以键值对形式放入context 中，在FetcherReducer中就可以获取到这个context，FetcherReducer继承的是GoraReducer类，并不是真正的hadoop的Reducer，Gora会把获取到的数据放入数据库中，比如hbase或mysql，FetcherReducer类干的事情较多，首先会实例化QueueFeeder，它是一个线程，接收FetcherMapper中的那个键值对并放入FetchItemQueues队列中，接着会实例化多个（根据配置文件配置情况）FetcherThread， 在这个线程中主要是处理FetchItemQueues队列中的每一个元素并由output函数对webpage的各个属性赋值（前面说到webpage 为存储输出数据的表），赋完值之后将WebPage对象放入context中供下一步骤（parse阶段）使用。</br></br>
+parse阶段主要是ParserMapper的map方法，该方法主要的是parseUtil.process(key, page)，这里的key和page分别是上一步骤的url和webpage对象，而process方法中首先会获取各个不同的parser，比如 htmlParser，tagParser，tikaParser（该parser很强大，开源项目tika，之前用它提取过图片等的文本信 息），jsParser等，获取到这些parser之后就需要用它们来对url对应的webpage进行解析并重新将解析后的数据赋值给webpage， 具体的解析过程下次再看源码（因为nutch的这些normalizer，filter，parser等是以插件形式存在的）。在IdentityPageReducer的reduce方法中就是将map中得到的url和webpage放入context中供下一步（updatedb阶段）使用。</br></br>
+updatedb 阶段就是更新数据库数据的阶段了，在DbUpdateMapper的map方法中是处理获取到的一些outlinks（外链）和每个link的得分。 DbUpdateReducer的reduce方法会更新各个webpage的一些属性如得分，最后再将新的webpage数据更新到数据库中。</br></br>
+solrindex阶段就是将获取到数据以索引的方式更新到solr中，这个步骤就比较简单了，使用SolrWriter将由IndexUtil.index方法获取到的NutchDocument放入solr的索引中。</br></br>
+以上就是一个nutch抓取数据的完整步骤，其中的细节讲的不是很清楚，待以后多使用使用回头再来补充吧。
