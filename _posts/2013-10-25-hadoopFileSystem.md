@@ -49,8 +49,7 @@ public static FileSystem get(URI uri, Configuration conf) throws IOException {
 }
 
 private static FileSystem createFileSystem(URI uri, Configuration conf) throws IOException {
-	
-    	Class<?> clazz = conf.getClass("fs." + uri.getScheme() + ".impl", null);
+    	Class<> clazz = conf.getClass("fs." + uri.getScheme() + ".impl", null);
     	LOG.debug("Creating filesystem for " + uri);
     	if (clazz == null) {
       		throw new IOException("No FileSystem for scheme: " + uri.getScheme());
@@ -71,7 +70,6 @@ FileSystem get(URI uri, Configuration conf) throws IOException{
       	if (fs != null) {
         		return fs;
       	}
-      
       	fs = createFileSystem(uri, conf);
       	synchronized (this) {  // refetch the lock again
         		FileSystem oldfs = map.get(key);
