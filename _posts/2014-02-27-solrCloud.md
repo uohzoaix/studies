@@ -88,7 +88,7 @@ if (command != null && DataImporter.ABORT_CMD.equals(command)) {
 }
 {% endhighlight %}
 处理器工厂创建处理器方法：
-{% highlight objc %}
+
 public UpdateRequestProcessor createProcessor(SolrQueryRequest req,
 
                                                 SolrQueryResponse rsp)
@@ -152,5 +152,5 @@ public UpdateRequestProcessor createProcessor(SolrQueryRequest req,
     return last;
 
   }
-{% endhighlight %}
+
 
