@@ -11,7 +11,7 @@ tags: []
 
 
 首先来看看FileSystem这个类，在hadoop运行时hadoop需要知道你到底使用的是哪种文件系统，至此hadoop支持多种文件系统，有：LocalFileSystem，DistributedFileSystem，S3FileSystem，HftpFileSystem，InMemroryFileSystem（这几种均可通过配置core-site.xml文件来设定特定的格式），在hadoop运行开始，我们需要提供运行的输入和输出目录，而hadoop并不知道这些文件是存在哪里，到底是在本地还是在其他节点或是其他机架上，而我们往往需要配置core-site.xml文件的fs.default.name=hdfs://xx:xx（该值默认为file:///即本地模式），在作业运行时hadoop会读取该配置项并且将值构造为一个URI并取出其shema，此处为hdfs，获取到具体的schema后即可通过读取core-site.xml中的fs.${schema}.impl获取具体的文件系统格式了，源码如下：
-{% highlight objc %}
+
 /** Returns the configured filesystem implementation.*/
 public static FileSystem get(Configuration conf) throws IOException {
 	return get(getDefaultUri(conf), conf);
@@ -58,7 +58,7 @@ private static FileSystem createFileSystem(URI uri, Configuration conf) throws I
 	fs.initialize(uri,conf);
 	return fs;
 }
-{% endhighlight %}
+
 上面的源码清楚的表示了如何实例化文件系统，其中fs.${schema}.impl.disable.cache表示是否缓存该文件系统如果不缓存每次新作业运行都会调用createFileSystem方法类实例化文件系统，如果缓存则可从cache中取，该值默认为true。我们来看看Cache的get方法：
 {% highlight objc %}
 FileSystem get(URI uri, Configuration conf) throws IOException{
@@ -88,7 +88,11 @@ FileSystem get(URI uri, Configuration conf) throws IOException{
 }
 {% endhighlight %}
 代码中使用同步快来获取文件系统，如果缓存中存在则直接返回缓存中的，如果不存在则重新去获取锁防止多线程影响去创建文件系统，可是在当
-
+{% highlight objc %}
+synchronized (this) {
+        fs = map.get(key);
+      }
+{% endhighlight %}
 锁释放的时候线程有可能会创建了文件系统，所以在获得锁之后需要FileSystem oldfs = map.get(key);检查是否已经实例化过了文件系统。</br>
 在每次作业开始获取文件系统之前hadoop需要将之前作业实例化出来的各种文件系统全部close掉也释放资源，代码如下：
 {% highlight objc %}
