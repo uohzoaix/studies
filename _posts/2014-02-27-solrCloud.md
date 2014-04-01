@@ -88,4 +88,69 @@ if (command != null && DataImporter.ABORT_CMD.equals(command)) {
 }
 {% endhighlight %}
 处理器工厂创建处理器方法：
+{% highlight objc %}
+public UpdateRequestProcessor createProcessor(SolrQueryRequest req,
+
+                                                SolrQueryResponse rsp)
+
+  {
+
+    UpdateRequestProcessor processor = null;
+
+    UpdateRequestProcessor last = null;
+
+   
+
+    final String distribPhase = req.getParams().get(DistributingUpdateProcessorFactory.DISTRIB_UPDATE_PARAM);
+
+    final boolean skipToDistrib = distribPhase != null;
+
+    boolean afterDistrib = true;  // we iterate backwards, so true to start
+
+
+
+    for (int i = chain.length-1; i>=0; i--) {
+
+//通过从后向前的方式进行创建，即最开始创建RunUpdateProcessor，接着DistributedUpdateProcessor，最后才是LogUpdateProcessor
+
+      UpdateRequestProcessorFactory factory = chain[i];
+
+
+
+      if (skipToDistrib) {
+
+        if (afterDistrib) {
+
+          if (factory instanceof DistributingUpdateProcessorFactory) {
+
+            afterDistrib = false;
+
+          }
+
+        } else if (!(factory instanceof LogUpdateProcessorFactory)) {    // TODO: use a marker interface for this?
+
+          // skip anything that is not the log factory
+
+          continue;
+
+        }
+
+      }
+
+
+
+//getInstance方法的第三个参数指的是该处理器的next即下一个处理器，这样就形成了一条链了
+
+      processor = factory.getInstance(req, rsp, last);
+
+      last = processor == null ? last : processor;
+
+    }
+
+//这里返回最后一个处理器即LogUpdateProcessor，它的next是DistributedUpdateProcessor，DistributedUpdateProcessor的next是RunUpdateProcessor
+
+    return last;
+
+  }
+{% endhighlight %}
 
