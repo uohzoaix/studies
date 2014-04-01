@@ -48,19 +48,36 @@ public static FileSystem get(URI uri, Configuration conf) throws IOException {
     	return CACHE.get(uri, conf);
 }
 
-private static FileSystem createFileSystem(URI uri, Configuration conf) throws IOException {
-    	Class<> clazz=conf.getClass(“fs.”+uri.getSchema()+”.impl”,null);
-	LOG.debug(“Creating filesystem for ”+url);
-	if(clazz==null){
-		throw new IOException(“No FileSystem for schema:”+url.getSchema());
-	}
-	FileSystem fs=(FileSystem)ReflectionUtils.newInstance(clazz,conf);
-	fs.initialize(uri,conf);
-	return fs;
-}
+
 {% endhighlight %}
 上面的源码清楚的表示了如何实例化文件系统，其中fs.${schema}.impl.disable.cache表示是否缓存该文件系统如果不缓存每次新作业运行都会调用createFileSystem方法类实例化文件系统，如果缓存则可从cache中取，该值默认为true。我们来看看Cache的get方法：
-
+{% highlight objc %}
+FileSystem get(URI uri, Configuration conf) throws IOException{
+      	Key key = new Key(uri, conf);
+      	FileSystem fs = null;
+      	synchronized (this) {
+        		fs = map.get(key);
+      	}
+      	if (fs != null) {
+        		return fs;
+      	}
+      	fs = createFileSystem(uri, conf);
+      	synchronized (this) {  // refetch the lock again
+        		FileSystem oldfs = map.get(key);
+        		if (oldfs != null) { // a file system is created while lock is releasing
+          			fs.close(); // close the new file system
+          			return oldfs;  // return the old file system
+        		}
+        		// now insert the new file system into the map
+        		if (map.isEmpty() && !clientFinalizer.isAlive()) {
+          			Runtime.getRuntime().addShutdownHook(clientFinalizer);
+        		}
+        		fs.key = key;
+        		map.put(key, fs);
+        		return fs;
+      	}
+}
+{% endhighlight %}
 代码中使用同步快来获取文件系统，如果缓存中存在则直接返回缓存中的，如果不存在则重新去获取锁防止多线程影响去创建文件系统，可是在当
 {% highlight objc %}
 synchronized (this) {
