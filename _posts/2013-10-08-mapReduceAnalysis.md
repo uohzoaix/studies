@@ -25,7 +25,7 @@ tags: []
 ##Map阶段 
  ![release](/studies/assets/images/maps.png)
 map首先从job input dir的位置开始加载文件，经过map函数之后计算的结果会先写入buffer in memory中，每一个map对应一块MapOutputBuffer,即图中的buffer in memory,这个memory得大小由一个著名参数io.sort.mb决定，默认为100MB，在提交的job Configure中或者jobhistory的xml配置都可以看到这个参数。
-{% highlight objc}
+{% highlight objc %}
 <property>
      <name>io.sort.mb</name>
      <value>100</value>
