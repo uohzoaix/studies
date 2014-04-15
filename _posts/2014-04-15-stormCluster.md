@@ -12,23 +12,27 @@ tags: []
 ###1.安装zookeeper
 很简单，直接将zookeeper下载下来即可，并将其下的bin目录配置到PATH里。使用./zkServer.sh start即可启动，./zkCli.sh是客户端的工具，如果两个命令不报错就说明zk配置成功，使用./zkServer.sh stop可停止zk。
 ###2.安装zeroMQ
-wget http://download.zeromq.org/zeromq-2.1.7.tar.gz</br>
-tar -xvf zeromq-2.1.7.tar.gz</br>
-cd zeromq-2.1.7</br>
-./configure</br>
-make && make install</br>
+{% highlight objc %}
+wget http://download.zeromq.org/zeromq-2.1.7.tar.gz
+tar -xvf zeromq-2.1.7.tar.gz
+cd zeromq-2.1.7
+./configure
+make && make install
+{% endhighlight %}
 在macosx系统中使用：brew install --universal zeromq安装即可。
 ###3.安装jzmq
-git clone https://github.com/nathanmarz/jzmq.git</br>
-cd jzmq</br>
-./autogen.sh</br>
-./configure</br>
-make</br>
-make install</br>
+{% highlight objc %}
+git clone https://github.com/nathanmarz/jzmq.git
+cd jzmq
+./autogen.sh
+./configure
+make
+make install
+{% endhighlight %}
 在这一步当中可能会遇到如下几个错误：</br>
-（1）make[1]: *** 没有规则可以创建“org/zeromq/ZMQ.class”需要的目标“classdist_noinst.stamp”。修正方法，创建classdist_noinst.stamp文件：</br>
+（1）make[1]: 没有规则可以创建“org/zeromq/ZMQ.class”需要的目标“classdist_noinst.stamp”。修正方法，创建classdist_noinst.stamp文件：</br>
 touch src/classdist_noinst.stamp</br>
-（2）错误：无法访问 org.zeromq.ZMQ   |   make[1]: *** 没有规则可以创建“all”需要的目标“org/zeromq/ZMQ$Context.class”。修正方法，进入src目录，手动编译相关java代码：</br>
+（2）错误：无法访问 org.zeromq.ZMQ   |   make[1]: 没有规则可以创建“all”需要的目标“org/zeromq/ZMQ$Context.class”。修正方法，进入src目录，手动编译相关java代码：</br>
 javac  ./src/org/zeromq/*.java</br>
 （3）jvm找不到jni_md.h文件。修正方法：</br>
 在系统中查找该文件并将该文件拷贝到相关的include目录。</br>
@@ -39,7 +43,7 @@ storm.zookeeper.servers:
        - 127.0.0.1 
 storm.zookeeper.port: 2181 
 nimbus.host: "127.0.0.1" 
-storm.local.dir: "/home/tp/storm-0.8.2/tmp/storm" 
+storm.local.dir: "~/code/tmp" 
 supervisor.slots.ports: 
         - 6700 
         - 6701 
