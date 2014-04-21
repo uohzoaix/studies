@@ -1,5 +1,4 @@
 <!-- Duoshuo Comment BEGIN -->
-	<ul class="ds-recent-visitors"></ul>
 	<div class="ds-thread"></div>
 	<script type="text/javascript">
 	var duoshuoQuery = {short_name:"uohzoaix"};
