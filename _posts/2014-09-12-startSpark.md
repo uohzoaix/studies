@@ -41,3 +41,4 @@ val count=textFile.flatMap(line => line.split(" ")).map(word => (word,1)).reduce
 count.collect()
 {% endhighlight %}
 sc是SparkContext类，它是spark的入口。关于其更加详细介绍待续。</br></br>
+spark第一课结束。
