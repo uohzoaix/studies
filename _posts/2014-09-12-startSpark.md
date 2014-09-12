@@ -32,7 +32,7 @@ Spark context available as sc.
 {% endhighlight %}
 ###4.读取hadoop文件
 {% highlight objc %}
-val textFile=sc.textFile("input/README.txt")
+val textFile=sc.textFile("hdfs://127.0.0.1:9000/user/uohzoaix/input/README.txt")
 #统计文件行数
 textFile.count()
 #按空格分隔统计各个词的数量。flatMap,map,reduceByKey均为scala语法
