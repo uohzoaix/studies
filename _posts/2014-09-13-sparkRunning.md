@@ -57,6 +57,6 @@ JAVA_HOME=/usr/local/lib/jdk1.7.0_45
 {% endhighlight %}
 接着启动hadoop集群，通过localhost:8080可以看到集群的启动状况。
 ###4.YARN和Mesos
-待续……</br>
-由于目前spark多是已standalone方式运行，接下来会详细讲解该方式。</br>
+待续……</br></br>
+由于目前spark多是已standalone方式运行，接下来会详细讲解该方式。</br></br>
 spark第二课结束。

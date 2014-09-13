@@ -26,7 +26,7 @@ MASTER=local ./spark-shell
 {% endhighlight %}
 看到如下输出即表示运行成功：
 {% highlight objc %}
-14/09/12 20:05:52 INFO Executor: Using REPL class URI: http://192.168.1.101:55267
+14/09/12 20:05:52 INFO Executor: Using REPL class URI: http://localhost:55267
 14/09/12 20:05:52 INFO SparkILoop: Created spark context..
 Spark context available as sc.
 {% endhighlight %}
