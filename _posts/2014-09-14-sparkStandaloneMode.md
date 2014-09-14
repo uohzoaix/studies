@@ -11,7 +11,7 @@ tags: []
 上篇文章讲了spark的各种运行方式，由于standalone mode是目前最常见的方式，所以这篇文章主要讲一下这种方式。</br></br>
 ###1.启动参数
 在上篇文章中启动master和workers节点时没有附加任何的参数，但spark提供了如下的一些参数用于启动时的一些环境设置：</br>
-**-i IP,--ip IP——>要监听的IP地址或者DNS机器名</br>
+**-i IP,--ip IP——>要监听的IP地址或者DNS机器名**</br>
 -p PORT, --port PORT——>要监听的端口（默认：master 7077，workers 随机）</br>
 --webui-port PORT——>web UI的端口（默认：master 8080，workers 8081）</br>
 -c CORES, --cores CORES——>允许spark应用使用的机器CPU数量（默认：所有，该值只对workers有作用）</br>
