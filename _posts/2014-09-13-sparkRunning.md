@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "spark之路第二天——spark启动方式"
+title: "spark之路第二课——spark启动方式"
 description: "spark学习系列第二篇"
 category: 
 - spark

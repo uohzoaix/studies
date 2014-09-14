@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "spark之路第一天"
+title: "spark之路第一课"
 description: "spark学习系列第一篇"
 category: 
 - spark
