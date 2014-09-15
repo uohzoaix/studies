@@ -50,9 +50,9 @@ tags: []
 *spark.deploy.defaultCores——>在没有设置spark.cores.max的情况下可通过该值设定分配给任务的CPU数，如果没有设置该值，任务会默认使用全部的CPU。将该值设小对于分享式集群来说可以防止某个用户使用整个集群导致其他用户得不到集群的使用权。（默认：负无穷大）*</br>
 *spark.worker.timeout——>master在该时间内没有收到worker的心跳会认为该worker已经挂掉。（默认：60s）*</br>
 下面是SPARK_WORKER_OPTS支持的一些系统属性：
-*spark.worker.cleanup.enabled——>定时清理worker和任务目录，该属性只在standalone模式下有作用，如果设置为true那么不管任务是否在运行都会进行清理。（默认：false）*
-*spark.worker.cleanup.interval——>worker清理旧任务目录的间隔（默认：1800s）*
-*spark.worker.cleanup.appDataTtl——>数据在worker上保留的时间，取决于当前机器的可用硬盘空间。由于任务的jars和logs都会被下载到worker机器上，所以特别是当频繁运行任务时硬盘可用空间会急剧下降（默认：3600\*24\*7）*
+*spark.worker.cleanup.enabled——>定时清理worker和任务目录，该属性只在standalone模式下有作用，如果设置为true那么不管任务是否在运行都会进行清理。（默认：false）*</br>
+*spark.worker.cleanup.interval——>worker清理旧任务目录的间隔（默认：1800s）*</br>
+*spark.worker.cleanup.appDataTtl——>数据在worker上保留的时间，取决于当前机器的可用硬盘空间。由于任务的jars和logs都会被下载到worker机器上，所以特别是当频繁运行任务时硬盘可用空间会急剧下降（默认：3600\*24\*7）*</br>
 ###3.提交任务到集群
 将spark://IP:PORT参数传递给SparkContext的构造方法中即可。
 ###4.资源调度
@@ -73,7 +73,7 @@ standalone模式会将失败的worker节点的任务全部移到另外一个work
 ####1.zookeeper管理master
 使用zookeeper来选举leader和存储相应的状态，这时可以启动多个master连接到同一个zookeeper，其中的一个会被选举为leader其他的会作为备用。当leader挂掉，另外一个master会被选举为leader并恢复挂掉的master的状态，这样就可以继续为worker服务了。这整个操作可能会消耗1至2分钟的时间，当然这段时间只会对新任务有影响，其他的正在运行的任务是不会受到影响的。</br>
 为了使用这种方式，在spark-env.sh文件中需要设置以下系统属性：
-*spark.deploy.recoveryMode——>如果设置为ZOOKEEPER则表示使用该种方式（默认：NONE）*
+*spark.deploy.recoveryMode——>如果设置为ZOOKEEPER则表示使用该种方式（默认：NONE）*</br>
 *spark.deploy.zookeeper.url——>zookeeper集群地址，如192.168.1.100:2181,192.168.1.101:2181*
 *spark.deploy.zookeeper.dir——>zookeeper存储状态的目录（默认：/spark）*</br>
 注意：当zookeeper不能选举其中一个master为leader，这时整个集群会发生问题，因为所有的master都会被任务是leader导致master互不相干的工作。</br>
@@ -81,6 +81,6 @@ standalone模式会将失败的worker节点的任务全部移到另外一个work
 当某个leader挂掉后，新的leader会连接所有之前注册过的任务或worker来通知它们leader已经改变，所以你可以在任务时候添加新的master，你唯一需要担心的是新的任务或worker是否能找到新添加进来的leader。
 ####2.使用本地文件系统进行单点恢复
 第一种方式在生产环境中是很好的选择，但是如果你仅仅只是想master挂掉时重启它（手动或者通过其他方式），那么这种方式是一个不错的选择，所以你需要配置以下属性：
-*spark.deploy.recoveryMode——>设置为FILESYSTEM以启用该方式*
-*spark.deploy.recoveryDirectory——>用来存储spark的恢复状态*
+*spark.deploy.recoveryMode——>设置为FILESYSTEM以启用该方式*</br>
+*spark.deploy.recoveryDirectory——>用来存储spark的恢复状态*</br>
 注意：当手动stop-master.sh来停止master时并不会清除master的状态，所以当你再次启动一个新的master时这时候就已经进入状态恢复模式了，所以这时候会消耗大约1分钟的时间来进行恢复。
