@@ -79,3 +79,8 @@ standalone模式会将失败的worker节点的任务全部移到另外一个work
 注意：当zookeeper不能选举其中一个master为leader，这时整个集群会发生问题，因为所有的master都会被任务是leader导致master互不相干的工作。</br>
 当zookeeper配置正确后，这时就可以启动这些master（可能在不同的机器上，只需要保证它们连在同一个zookeeper集群上即可），当需要部署新任务或添加worker到spark集群中时，需要将leader的IP地址传递给SparkContext，你也可以将所有的master机器的IP地址传递进去，如spark://host1:port1,host2:port2。</br>
 当某个leader挂掉后，新的leader会连接所有之前注册过的任务或worker来通知它们leader已经改变，所以你可以在任务时候添加新的master，你唯一需要担心的是新的任务或worker是否能找到新添加进来的leader。
+####2.使用本地文件系统进行单点恢复
+第一种方式在生产环境中是很好的选择，但是如果你仅仅只是想master挂掉时重启它（手动或者通过其他方式），那么这种方式是一个不错的选择，所以你需要配置以下属性：
+*spark.deploy.recoveryMode——>设置为FILESYSTEM以启用该方式*
+*spark.deploy.recoveryDirectory——>用来存储spark的恢复状态*
+注意：当手动stop-master.sh来停止master时并不会清除master的状态，所以当你再次启动一个新的master时这时候就已经进入状态恢复模式了，所以这时候会消耗大约1分钟的时间来进行恢复。
