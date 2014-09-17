@@ -39,9 +39,6 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
   --master local[8] 
   /path/to/examples.jar 
   100
-
- Run on a Spark standalone cluster
-
 {% endhighlight %}
 ###master urls
 传递给spark-submit中的master url参数可以是如下形式的一种：</br>
