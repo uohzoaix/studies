@@ -33,14 +33,14 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
 当应用是通过远程进行提交的，应该选择cluster模式，因为这种模式会减少drivers和executors之间的带宽负载。但是目前standalone，mesos或python应用都不支持该模式。</br>
 下面是一些spark-submit的例子：</br>
 {% highlight objc %}
- #Run application locally on 8 cores
+ Run application locally on 8 cores
 ./bin/spark-submit 
   --class org.apache.spark.examples.SparkPi 
   --master local[8] 
   /path/to/examples.jar 
   100
 
- ######Run on a Spark standalone cluster
+ Run on a Spark standalone cluster
 ./bin/spark-submit 
   --class org.apache.spark.examples.SparkPi 
   --master spark://207.184.161.138:7077 
@@ -49,17 +49,17 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
   /path/to/examples.jar 
   1000
 
- ######Run on a YARN cluster
+ Run on a YARN cluster
 export HADOOP_CONF_DIR=XXX
 ./bin/spark-submit 
   --class org.apache.spark.examples.SparkPi 
-  --master yarn-cluster   ######can also be yarn-client for client mode
+  --master yarn-cluster   can also be yarn-client for client mode
   --executor-memory 20G 
   --num-executors 50 
   /path/to/examples.jar 
   1000
 
- ######Run a Python application on a cluster
+ Run a Python application on a cluster
 ./bin/spark-submit 
   --master spark://207.184.161.138:7077 
   examples/src/main/python/pi.py 
