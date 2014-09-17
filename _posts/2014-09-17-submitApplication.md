@@ -53,7 +53,7 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
 export HADOOP_CONF_DIR=XXX
 ./bin/spark-submit \
   --class org.apache.spark.examples.SparkPi \
-  --master yarn-cluster \  # can also be `yarn-client` for client mode
+  --master yarn-cluster \  # can also be yarn-client for client mode
   --executor-memory 20G \
   --num-executors 50 \
   /path/to/examples.jar \
