@@ -38,7 +38,18 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
   --class org.apache.spark.examples.SparkPi 
   --master local[8] 
   /path/to/examples.jar 
-  
+  100
+
+ Run on a Spark standalone cluster
+./bin/spark-submit 
+  --class org.apache.spark.examples.SparkPi 
+  --master spark://207.184.161.138:7077 
+  --executor-memory 20G 
+  --total-executor-cores 100 
+  /path/to/examples.jar 
+  1000
+
+ 
 {% endhighlight %}
 ###master urls
 传递给spark-submit中的master url参数可以是如下形式的一种：</br>
