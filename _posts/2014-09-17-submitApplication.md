@@ -37,6 +37,7 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
 ./bin/spark-submit 
   --class org.apache.spark.examples.SparkPi 
   --master local[8] 
+  /path/to/examples.jar 
   
 {% endhighlight %}
 ###master urls
