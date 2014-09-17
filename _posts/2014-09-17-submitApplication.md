@@ -33,11 +33,7 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
 当应用是通过远程进行提交的，应该选择cluster模式，因为这种模式会减少drivers和executors之间的带宽负载。但是目前standalone，mesos或python应用都不支持该模式。</br>
 下面是一些spark-submit的例子：</br>
 {% highlight objc %}
- Run application locally on 8 cores
-./bin/spark-submit 
-  --class org.apache.spark.examples.SparkPi 
-  --master local[8] 
-  
+ aaaa
 {% endhighlight %}
 ###master urls
 传递给spark-submit中的master url参数可以是如下形式的一种：</br>
