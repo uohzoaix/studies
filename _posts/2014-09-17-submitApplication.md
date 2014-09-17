@@ -37,33 +37,7 @@ spark是使用spark-submit这个命令来提交任务的。用法如下：</br>
 ./bin/spark-submit 
   --class org.apache.spark.examples.SparkPi 
   --master local[8] 
-  /path/to/examples.jar 
-  100
-
- Run on a Spark standalone cluster
-./bin/spark-submit 
-  --class org.apache.spark.examples.SparkPi 
-  --master spark://207.184.161.138:7077 
-  --executor-memory 20G 
-  --total-executor-cores 100 
-  /path/to/examples.jar 
-  1000
-
- Run on a YARN cluster
-export HADOOP_CONF_DIR=XXX
-./bin/spark-submit 
-  --class org.apache.spark.examples.SparkPi 
-  --master yarn-cluster   can also be yarn-client for client mode
-  --executor-memory 20G 
-  --num-executors 50 
-  /path/to/examples.jar 
-  1000
-
- Run a Python application on a cluster
-./bin/spark-submit 
-  --master spark://207.184.161.138:7077 
-  examples/src/main/python/pi.py 
-  1000
+  
 {% endhighlight %}
 ###master urls
 传递给spark-submit中的master url参数可以是如下形式的一种：</br>
