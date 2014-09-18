@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "spark之路第四课——提交spark任务"
-description: "spark学习系列第四篇"
+title: "spark之路第五课——配置spark"
+description: "spark学习系列第五篇"
 category: 
 - spark
 tags: []
