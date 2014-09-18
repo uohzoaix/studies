@@ -29,7 +29,12 @@ val sc = new SparkContext(conf)
 上述命令也会读取conf/spark-defaults.conf文件加载属性。
 ####spark支持的属性
 可以通过http://<driver>:4040页面上的Environment标签查看所有已经正确设置的属性。</br>
-属性名|默认值|注释</br>
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+|属性名|默认值|注释</br>
 :---------------|:---------------|:---------------</br>
 spark.app.name|(none)|任务名称
 spark.master|(none)|集群地址
