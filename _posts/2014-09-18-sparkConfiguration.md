@@ -120,3 +120,19 @@ spark.kryo.referenceTracking|true|当使用kryo序列化器时，是否跟踪对
 spark.kryo.registrationRequired|false|是否需要使用kryo来注册对象。当为true时，如果序列化一个未使用kryo注册的对象则会抛出异常，当为false，kryo会将未注册的类的名字一起写到序列化对象中，所以这会带来性能开支，所以在用户还没有从注册队列中删除相应的类时应该设置为true
 spark.kryoserializer.buffer.mb|0.064|kryo的序列化缓冲区的初始值。每个worker的每个core都会有一个缓冲区
 spark.kryoserializer.buffer.max.md|64|kryo序列化缓冲区允许的最大值（单位：M），这个值必须大于任何你需要序列化的对象。当遇到buffer limit exceeded异常时可以适当增大该值
+#####执行时相关属性
+属性名|默认值|注释
+:---------------|:---------------|:---------------
+spark.default.parallelism|<li>local mode:本地机器的CPU数量<li>mesos file grained mode:8<li>其他模式：所有执行器节点的cpu数量之和与2的最大值|当没有显式设置该值表示系统使用集群中运行shuffle操作（如groupByKey，reduceByKey）的默认的任务数
+spark.broadcast.factory|org.apache.spark.broadcast.TorrentBroadcastFactory|广播时使用的实现类
+spark.broadcast.blockSize|4096|TorrentBroadcastFactory的块大小。该值过大会降低广播时的并行度（速度变慢），过小的话BlockManager的性能不能发挥到最佳
+spark.files.overwrite|false|通过SparkContext.addFile()添加的文件是否可以覆盖之前已经存在并且内容不匹配的文件
+spark.files.fetchTimeout|false|获取由driver通过SparkContext.addFile()添加的文件时是否启用通信超时
+spark.storage.memoryFraction|0.6|java heap用于spark内存缓存的比例，该值不应该大于jvm中老生代对象的大小。当你自己设置了老生代的大小时可以适当加大该值
+spark.storage.unrollFraction|0.2|spark.storage.memoryFraction中用于展开块的内存比例，当没有足够内存来展开新的块的时候会通过丢弃已经存在的旧的块来腾出空间
+spark.tachyonStore.baseDir|System.getProperty("java.io.tmpdir")|Tachyon文件系统存放RDD的目录。tachyon文件系统的URL通过spark.tachyonStore.url进行设置。可通过逗号分隔设置多个目录
+spark.storage.memoryMapThreshold|8192|以字节为单位的快大小，用于磁盘读取一个块大小时进行内存映射。这可以防止spark在内存映射时使用很小的块，一般情况下，对块进行内存映射的开销接近或低于操作系统的页大小
+spark.tachyonStore.url|tachyon://localhost:19998|tachyon文件系统的url
+spark.cleaner.ttl|(infinite)|spark记录任何元数据（stages生成、task生成等）的持续时间。定期清理可以确保将超期的元数据删除，这在运行长时间任务时是非常有用的，如运行7*24的spark streaming任务。RDD持久化在内存中的超期数据也会被清理
+spark.hadoop.validateOutputSpecs|true|当为true时，在使用saveAsHadoopFile或者其他变体时会验证数据输出的合理性（如检查输出目录是否还存在）。
+spark.executor.heartbeatInterval|10000|每个executor向driver发送心跳的间隔时间（毫秒）。
