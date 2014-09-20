@@ -106,3 +106,17 @@ spark.ui.killEnabled|true|允许通过web ui界面停止stage和jobs
 spark.eventLog.enabled|false|是否记录spark事件的日志
 spark.eventLog.compress|false|是否压缩事件产生的日志
 spark.eventLog.dir|file://tmp/spark-events|spark事件产生日志的目录，在这个目录里，每个任务会创建一个子目录存放各个任务的日志文件
+#####压缩序列化相关参数
+属性名|默认值|注释
+:---------------|:---------------|:---------------
+spark.broadcast.compress|true|是否压缩需要广播的数据
+spark.rdd.compress|false|RDD数据在序列化之后是否进一步进行压缩后再存储到内存或磁盘上
+spark.io.compression.codec|snappy|RDD数据或shuffle输出数据使用的压缩算法，有lz4，lzf和snappy三种方式
+spark.io.compression.snappy.block.size|32768|在snappy压缩时指定的块大小（字节），降低该值也会降低shuffle过程使用的内存
+spark.io.compression.lz4.block.size|32768|和上述类似，只不过只在压缩方式为lz4时有效
+spark.closure.serializer|org.apache.spark.serializer.JavaSerializer|序列化类
+spark.serializer.objectStreamReset|100|当序列化方式使用JavaSerializer时，序列化器会缓存对象以免写入冗余的数据，但这会使垃圾回收器停止对这些对象进行垃圾收集。所以当使用reset序列化器后就会使垃圾回收器重新收集那些旧对象。该值设置为-1则表示禁止周期性的reset，默认情况下每100个对象就会被reset一次序列化器
+spark.kryo.referenceTracking|true|当使用kryo序列化器时，是否跟踪对同一个对象的引用情况，这对对象引用有循环引用或同一对象有多个副本的情况是很有用的。否则可以设置为false以提高性能
+spark.kryo.registrationRequired|false|是否需要使用kryo来注册对象。当为true时，如果序列化一个未使用kryo注册的对象则会抛出异常，当为false，kryo会将未注册的类的名字一起写到序列化对象中，所以这会带来性能开支，所以在用户还没有从注册队列中删除相应的类时应该设置为true
+spark.kryoserializer.buffer.mb|0.064|kryo的序列化缓冲区的初始值。每个worker的每个core都会有一个缓冲区
+spark.kryoserializer.buffer.max.md|64|kryo序列化缓冲区允许的最大值（单位：M），这个值必须大于任何你需要序列化的对象。当遇到buffer limit exceeded异常时可以适当增大该值
