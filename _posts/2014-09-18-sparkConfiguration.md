@@ -136,3 +136,20 @@ spark.tachyonStore.url|tachyon://localhost:19998|tachyon文件系统的url
 spark.cleaner.ttl|(infinite)|spark记录任何元数据（stages生成、task生成等）的持续时间。定期清理可以确保将超期的元数据删除，这在运行长时间任务时是非常有用的，如运行7*24的spark streaming任务。RDD持久化在内存中的超期数据也会被清理
 spark.hadoop.validateOutputSpecs|true|当为true时，在使用saveAsHadoopFile或者其他变体时会验证数据输出的合理性（如检查输出目录是否还存在）。
 spark.executor.heartbeatInterval|10000|每个executor向driver发送心跳的间隔时间（毫秒）。
+#####网络相关属性
+属性名|默认值|注释
+:---------------|:---------------|:---------------
+spark.driver.host|(本地主机名)|driver监听的IP或主机名，用于与执行器和standalone模式的master节点进行通信
+spark.driver.port|(随机)|driver监听的端口号
+spark.fileserver.port|(随机)|driver的HTTP文件服务器监听的端口
+spark.broadcast.port|(随机)|driver的广播服务器监听的端口，该参数对于torrent广播模式是没有作用的
+spark.replClassServer.port|(随机)|driver的HTTP类服务器监听的端口，只用于spark shell
+spark.blockManager.port|(随机)|所有块管理者监听的端口
+spark.executor.port|(随机)|executor监听的端口，用于与driver进行通信
+spark.port.maxRetries|16|绑定到某个端口的最大重试次数
+spark.akka.frameSieze|10|以MB为单位的driver和executor之间通信信息的大小，该值越大，driver可以接受更大的计算结果（如在一个很大的数据集上使用collect()方法）
+spark.akka.threads|4|用于通信的actor线程数，当在很大的集群中driver拥有更多的CPU内核数的driver可以适当增加该属性的值
+spark.akka.timeout|100|spark节点之间通信的超时时间（秒）
+spark.akka.heartbeat.pauses|600|下面三个参数通常一起使用。如果启用错误探测器，有助于对恶意的executor的定位，而对于由于GC暂停或网络滞后引起的情况下，不需要开启错误探测器，另外错误探测器的开启会导致由于心跳信息的频繁交换引起网络泛滥。设大该值可以禁用akka内置的错误探测器，表示akka可接受的心跳停止时间（秒）
+spark.akka.failure-detector.threshold|300.0|设大该值可以禁用akka内置的错误探测器，对应akka的akka.remote.transport-failure-detector.threshold
+spark.akka.heartbeat.interval|1000|设大该值可以禁用akka内置的错误探测器，该值越大会减少网络负载，越小就会向akka的错误探测器发送信息
