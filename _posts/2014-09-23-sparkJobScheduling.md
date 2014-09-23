@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "spark之路第五六——任务调度"
+title: "spark之路第六课——任务调度"
 description: "spark学习系列第六篇"
 category: 
 - spark
