@@ -12,6 +12,6 @@ spark streaming中的DStream表示一个连续的数据流，DStream可以通过
 ###例子
 下面的例子是计算从tcp接收到的数据中的单词个数。</br>
 首先需要导入streaming需要的类，StreamingContext是使用streaming的入口，下面创建了一个2个线程和每隔1秒进行批处理的StreamingContext类：
-{% highlight objc %}
+```scala
 import org.apache.spark.\_
-{% endhighlight %}
+```
