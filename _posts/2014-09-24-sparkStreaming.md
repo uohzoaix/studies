@@ -14,11 +14,4 @@ spark streaming中的DStream表示一个连续的数据流，DStream可以通过
 首先需要导入streaming需要的类，StreamingContext是使用streaming的入口，下面创建了一个2个线程和每隔1秒进行批处理的StreamingContext类：
 {% highlight objc %}
 import org.apache.spark.\_
-import org.apache.spark.streaming.\_
-import org.apache.spark.streaming.StreamingContext.\_
-
-// Create a local StreamingContext with two working thread and batch interval of 1 second
-val conf = new SparkConf().setMaster("local[2]").setAppName("NetworkWordCount")
-val ssc = new StreamingContext(conf, Seconds(1))
 {% endhighlight %}
-
