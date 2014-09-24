@@ -14,4 +14,34 @@ spark streaming中的DStream表示一个连续的数据流，DStream可以通过
 首先需要导入streaming需要的类，StreamingContext是使用streaming的入口，下面创建了一个2个线程和每隔1秒进行批处理的StreamingContext类：
 ```scala
 import org.apache.spark.\_
+import org.apache.spark.streaming.\_
+import org.apache.spark.streaming.StreamingContext.\_
+// Create a local StreamingContext with two working thread and batch interval of 1 second
+val conf = new SparkConf().setMaster("local[2]").setAppName("NetworkWordCount")
+val ssc = new StreamingContext(conf, Seconds(1))
+```
+接下来既可以通过StreamingContext来创建DStream（也就是监听tcp进行数据接收）：
+```scala
+// Create a DStream that will connect to hostname:port, like localhost:9999
+val lines = ssc.socketTextStream("localhost", 9999)
+```
+接下来将接收到的每行数据按空格分隔：
+```scala
+// Split each line into words
+val words = lines.flatMap(\_.split(" "))
+```
+上面使用flatMap创建了一个新的DStream，接下来就可以统计每个单词的个数了：
+```scala
+import org.apache.spark.streaming.StreamingContext.\_
+// Count each word in each batch
+val pairs = words.map(word => (word, 1))
+val wordCounts = pairs.reduceByKey(\_ + \_)
+// Print the first ten elements of each RDD generated in this DStream to the console
+wordCounts.print()
+```
+上面代码首先将每个单词变成（word,1）形式，然后通过reduceByKey将word相等的pair的个数相加。最后打印结果（这个结果也只是每秒（通过最开始程序指定）接收到的数据的统计结果）。</br>
+由于spark是懒加载的，所以上面的程序并不会真正进行计算，待执行到下面代码后程序才会从头开始处理程序：
+```scala
+ssc.start()             // Start the computation
+ssc.awaitTermination()  // Wait for the computation to terminate
 ```
