@@ -45,3 +45,17 @@ wordCounts.print()
 ssc.start()             // Start the computation
 ssc.awaitTermination()  // Wait for the computation to terminate
 {% endhighlight %}
+注意：  
+<li>当程序调用了streamingContext.start()方法之后，新的计算逻辑就不能添加进来
+<li>当程序调用了streamingContext.stop()方法后，那么这个程序里面的计算逻辑就不能被重新使用
+<li>在同一时间内一个JVM里只会存在一个StreamingContext
+<li>因为初始化StreamingContext时也会初始化一个SparkContext，而stop()方法在停止streamingContext同时也会停止SparkContext，如果只想停止StreamingContext，则可以将stop()方法的stopSparkContext参数设为false
+<li>SparkContex可以被用来创建多个StreamingContext，只要其他的StreamingContext都停止了
+###DStream
+DStream在spark中表示一系列的数据流，其中的内容就是一个个的RDD数据集，在DStream上的操作会被转化为操作其内部的RDD。
+####Input DStream
+input DStream是从各种数据源接收到的流，每个input DStream都有一个receiver对象用来从数据源接收数据并且将数据存放在内存中。所以每个input DStream只会接收一个单独的数据流，但可以创建多个input DStream以便能并行的接收到多个数据流。  
+接收器是作为一个长时间运行的任务运行在spark的worker或executor中，因此一个接收器会占用一个cpu，所以spark streaming应用需要分配足够的cpu来处理接收到的数据。  
+注意：
+<li>当分配给spark streaming应用的cpu少于或等于input DSteam数或接收器数，那么该应用就会将所有cpu用来接收数据，这样接收到的数据就不能被处理
+<li>当在本地运行并且master URL设置为local，那么只有一个cpu用来运行任务，这是很不高效的做法，因为这个cpu会被数据接收器占用，这时就没有cpu用来处理数据了
