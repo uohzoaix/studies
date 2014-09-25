@@ -59,3 +59,17 @@ input DStream是从各种数据源接收到的流，每个input DStream都有一
 注意：
 <li>当分配给spark streaming应用的cpu少于或等于input DSteam数或接收器数，那么该应用就会将所有cpu用来接收数据，这样接收到的数据就不能被处理
 <li>当在本地运行并且master URL设置为local，那么只有一个cpu用来运行任务，这是很不高效的做法，因为这个cpu会被数据接收器占用，这时就没有cpu用来处理数据了
+####基本数据源
+上面例子使用了tcp作为数据源，另外还有很多其他的基本数据源：
+<li>文件系统：为了从文件系统（hdfs等）读取数据，可以按下面方式创建DStream：
+{% highlight objc %}
+streamingContext.fileStream\[keyClass, valueClass, inputFormatClass\](dataDirectory)
+{% endhighlight %}
+spark streaming会从dataDirectory文件夹读取所有文件（除该文件夹中子文件夹里的文件外），需要注意这些文件必须有相同的数据格式；这些文件必须以原子移动或重命名的方式在这个文件夹内创建；一旦这些文件被创建，那么它就不能被改变了，所以以后在这些文件里添加新的内容时这些新的内容将不会被读取。
+<li>基于actor的数据流：这种方式可以通过streamingContext.actorStream(actorProps, actor-name)来创建DStream
+<li>RDD队列：为了能够测试spark streaming程序，可以使用streamingContext.queueStream(queueOfRDDs)方式创建DStream
+####高级数据源
+高级数据源包括之前提到的kafka，flume，twitter等，比如要使用twitter的数据流创建DStream，需要做以下事情：  
+1.将spark-streaming-twitter_2.10添加到sbt或maven中  
+2.导入TwitterUtils类并使用TwitterUtils.createStream(sparkStreamingContext)方法来创建DStream  
+3.生成jar包部署改程序
