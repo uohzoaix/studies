@@ -73,3 +73,82 @@ spark streaming会从dataDirectory文件夹读取所有文件（除该文件夹�
 1.将spark-streaming-twitter_2.10添加到sbt或maven中  
 2.导入TwitterUtils类并使用TwitterUtils.createStream(sparkStreamingContext)方法来创建DStream  
 3.生成jar包部署改程序
+####DStream转换
+DStream支持的常见转换方式有以下几种：
+<table>
+<thead>
+<tr class="header">
+<th align="left">转换方法</th>
+<th align="left">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">map(func)</td>
+<td align="left">将源DStream中的每一个元素经过func函数的处理并返回一个新的DStream</td>
+</tr>
+<tr class="even">
+<td align="left">flatMap(func)</td>
+<td align="left">类似map，但每个元素会返回0或多个元素</td>
+</tr>
+<tr class="odd">
+<td align="left">filter(func)</td>
+<td align="left">返回func函数返回true的元素组成的DStream</td>
+</tr>
+<tr class="even">
+<td align="left">repartition(numPartitions)</td>
+<td align="left">将DStream重新进行分区</td>
+</tr>
+<tr class="odd">
+<td align="left">union(otherStream)</td>
+<td align="left">返回包含源DStream和otherDStream的新DStream</td>
+</tr>
+<tr class="even">
+<td align="left">count()</td>
+<td align="left">返回源DStream中每个RDD数据中的元素个数</td>
+</tr>
+<tr class="odd">
+<td align="left">reduce(func)</td>
+<td align="left">使用func函数（该函数接受2个参数并返回一个结果）计算源DStream中的每个RDD数据的元素</td>
+</tr>
+<tr class="even">
+<td align="left">countByValue()</td>
+<td align="left">返回DStream中每个元素的出现次数</td>
+</tr>
+<tr class="odd">
+<td align="left">reduceByKey(func,[numTasks])</td>
+<td align="left">DStream格式为(K,V)格式，通过func函数的处理返回(K,V)格式数据。在本地模式numTasks的默认值为2，在集群模式下默认值为spark.default.parallelism配置的值</td>
+</tr>
+<tr class="even">
+<td align="left">join(otherStream,[numTasks])</td>
+<td align="left">由(K,V)和(K,W)返回(K,(V,W))</td>
+</tr>
+<tr class="odd">
+<td align="left">cogroup(otherStream,[numTasks])</td>
+<td align="left">由(K,V)和(K,W)返回(K,Seq[V],Seq[W])</td>
+</tr>
+<tr class="even">
+<td align="left">transform(func)</td>
+<td align="left">DStream中的每个RDD通过func函数的处理转变为新的RDD</td>
+</tr>
+<tr class="odd">
+<td align="left">updateStateByKey(func)</td>
+<td align="left">改变DStream中key的状态</td>
+</tr>
+</tbody>
+</table>
+下面详细讲下最后两个装换方法：  
+#####UpdateStateByKey
+这个方法允许获取数据新的状态，需要以下两个步骤：  
+1.首先需要定义数据的初始状态：状态可以为多种数据类型  
+2.定义状态改变函数：该函数利用数据之前的状态和stream中新的值返回新的状态  
+下面的例子中状态改变函数将计数作为状态，其中pairs DStream是（word,1）格式：
+{% highlight objc %}
+def updateFunction(newValues: Seq[Int], runningCount: Option[Int]): Option[Int] = {
+    val newCount = ...  // add the new values with the previous running count to get the new count
+    Some(newCount)
+}
+val runningCounts = pairs.updateStateByKey[Int](updateFunction _)
+{% endhighlight %}
+上面的例子中每个word都会传递到状态改变函数中处理，传递的newValues就是一系列的1，所以上述例子也可以用来计算每个word的次数。
+
