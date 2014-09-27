@@ -173,11 +173,37 @@ spark streaming也提供了窗口计算，它允许在滑动窗口上的数据�
 val windowedWordCounts = pairs.reduceByKeyAndWindow((a:Int,b:Int) => (a + b), Seconds(30), Seconds(10))
 {% endhighlight %}
 例子中用到了reduceByKeyAndWindow操作，其他的一些常见窗口操作如下：
-转换方法|意义
-:---------------|:---------------
-window(windowLength,slideInterval)|返回进过窗口批处理的DStream
-countByWindow(windowLength,slideInterval)|计算流数据中每个滑动窗口中的元素数量
-reduceByWindow(func,windowLength,slideInterval)|使用func在每个窗口中计算元素的总数
-reduceByKeyAndWindow(func, windowLength, slideInterval, [numTasks])|每个滑动窗口中计算(K,V)中每个key的总数，返回格式为(K,V)
-reduceByKeyAndWindow(func, invFunc, windowLength, slideInterval, [numTasks])|上述方法的一个高效实现，基于上个窗口的数据进行计算
-countByValueAndWindow(windowLength, slideInterval, [numTasks])|计算(K,V)返回(K,Long)
+<table>
+<thead>
+<tr class="header">
+<th align="left">转换方法</th>
+<th align="left">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">window(windowLength,slideInterval)</td>
+<td align="left">返回进过窗口批处理的DStream</td>
+</tr>
+<tr class="even">
+<td align="left">countByWindow(windowLength,slideInterval)</td>
+<td align="left">计算流数据中每个滑动窗口中的元素数量</td>
+</tr>
+<tr class="odd">
+<td align="left">reduceByWindow(func,windowLength,slideInterval)</td>
+<td align="left">使用func在每个窗口中计算元素的总数</td>
+</tr>
+<tr class="even">
+<td align="left">reduceByKeyAndWindow(func, windowLength, slideInterval, [numTasks])</td>
+<td align="left">每个滑动窗口中计算(K,V)中每个key的总数，返回格式为(K,V)</td>
+</tr>
+<tr class="odd">
+<td align="left">reduceByKeyAndWindow(func, invFunc, windowLength, slideInterval, [numTasks])</td>
+<td align="left">上述方法的一个高效实现，基于上个窗口的数据进行计算</td>
+</tr>
+<tr class="even">
+<td align="left">countByValueAndWindow(windowLength, slideInterval, [numTasks])</td>
+<td align="left">计算(K,V)返回(K,Long)</td>
+</tr>
+</tbody>
+</table>
