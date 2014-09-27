@@ -151,4 +151,33 @@ def updateFunction(newValues: Seq[Int], runningCount: Option[Int]): Option[Int] 
 val runningCounts = pairs.updateStateByKey[Int](updateFunction _)
 {% endhighlight %}
 上面的例子中每个word都会传递到状态改变函数中处理，传递的newValues就是一系列的1，所以上述例子也可以用来计算每个word的次数。
-
+#####转换操作
+转换操作允许DStream执行RDD-RDD函数，转换操作可以用于任何RDD上。例如当你想实时将输入数据与之前计算好的数据进行合并执行filter操作，可以：
+{% highlight objc %}
+val spamInfoRDD = ssc.sparkContext.newAPIHadoopRDD(...) // RDD containing spam information
+val cleanedDStream = wordCounts.transform(rdd => {
+  rdd.join(spamInfoRDD).filter(...) // join data stream with spam information to do data cleaning
+  ...
+})
+{% endhighlight %}
+#####窗口操作
+spark streaming也提供了窗口计算，它允许在滑动窗口上的数据进行转换操作。下图介绍了滑动窗口：
+![Alt text](https://spark.apache.org/docs/latest/img/streaming-dstream-window.png)
+上图显示，每个时刻窗口会在源DStream上滑动，在这个窗口里的RDD会被合并和进行相应的操作生成窗口DStream。在上图的情形下，相关操作会在最后3个时间单元的数据上进行，并且滑动2个时间单元，所以窗口操作需要两个参数：
+<li>窗口长度-窗口的持续时间（上图中的3）
+<li>滑动间隔时间-窗口间隔多久进行一次操作（上图中的2）
+这两个参数必须是源DStream中数据单元（上图为1）的倍数（上图为1）。  
+下面是窗口操作的一个例子，假设需要在最后的30秒每10秒进行一次wordCount，代码如下（30秒作为窗口持续时间参数，10秒作为窗口操作间隔时间）：
+{% highlight objc %}
+// Reduce last 30 seconds of data, every 10 seconds
+val windowedWordCounts = pairs.reduceByKeyAndWindow((a:Int,b:Int) => (a + b), Seconds(30), Seconds(10))
+{% endhighlight %}
+例子中用到了reduceByKeyAndWindow操作，其他的一些常见窗口操作如下：
+转换方法|意义
+:---------------|:---------------
+window(windowLength,slideInterval)|返回进过窗口批处理的DStream
+countByWindow(windowLength,slideInterval)|计算流数据中每个滑动窗口中的元素数量
+reduceByWindow(func,windowLength,slideInterval)|使用func在每个窗口中计算元素的总数
+reduceByKeyAndWindow(func, windowLength, slideInterval, [numTasks])|每个滑动窗口中计算(K,V)中每个key的总数，返回格式为(K,V)
+reduceByKeyAndWindow(func, invFunc, windowLength, slideInterval, [numTasks])|上述方法的一个高效实现，基于上个窗口的数据进行计算
+countByValueAndWindow(windowLength, slideInterval, [numTasks])|计算(K,V)返回(K,Long)
