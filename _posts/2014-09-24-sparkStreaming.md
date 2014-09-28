@@ -207,3 +207,79 @@ val windowedWordCounts = pairs.reduceByKeyAndWindow((a:Int,b:Int) => (a + b), Se
 </tr>
 </tbody>
 </table>
+#####DStream输出操作
+输出操作允许DStream的数据放入外置系统如数据库或文件系统，由于输出操作需要将最终数据放入外置系统中，所以执行输出操作的时候会开始真正执行之前的转换操作。下表是一些输出操作：
+<table>
+<thead>
+<tr class="header">
+<th align="left">输出操作</th>
+<th align="left">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">print()</td>
+<td align="left">输出DStream中每批数据的前十个元素，常用于调试</td>
+</tr>
+<tr class="even">
+<td align="left">saveAsObjectFiles(prefix,[suffix])</td>
+<td align="left">将DStream中的内容保存为序列化的SequenceFile，每批数据产生的文件名为：prefix-TIME_IN_MS[.suffix]</td>
+</tr>
+<tr class="odd">
+<td align="left">saveAsHadoopFiles(prefix,[suffix])</td>
+<td align="left">将DStream中的内容保存为hadoop的text file，每批数据产生的文件名为：prefix-TIME_IN_MS[.suffix]</td>
+</tr>
+<tr class="even">
+<td align="left">foreachRDD(func)</td>
+<td align="left">最常见的输出操作，流中的RDD都会通过func函数处理，这个func的作用是将RDD中的数据放入外置系统如文件、数据库</td>
+</tr>
+</tbody>
+</table>
+#####foreachRDD的设计模式
+dstream.foreachRDD是非常有用的操作，但使用它需要避免如下的几个错误：
+<li>将数据写入外置系统中需要创建一个连接对象（如：tcp连接）并使用这个连接将数据发送到远程系统。为达到这个目的，开发人员可能会尝试在spark的driver中创建这个连接，并在spark的worker中使用这个连接来保存RDD中的数据，代码如下：
+{% highlight objc %}
+dstream.foreachRDD(rdd => {
+      val connection = createNewConnection()  // executed at the driver
+      rdd.foreach(record => {
+          connection.send(record) // executed at the worker
+      })
+  })
+{% endhighlight %}
+这种方式是不正确的，因为这需要将这个连接序列化以便将它从driver传送到worker中，这样的连接对象是不能在机器之间进行传送的。上面会发生序列化错误（连接对象不能被序列化）和初始化错误（连接对象需要在worker端进行初始化）等错误。正确的做法是在worker端进行创建连接对象。  
+<li>但这又会带来另外一个问题-每个数据记录都会创建一个新的连接，如：
+{% highlight objc %}
+dstream.foreachRDD(rdd => {
+      rdd.foreach(record => {
+          val connection = createNewConnection()
+          connection.send(record)
+          connection.close()
+      })
+  })
+{% endhighlight %}
+创建连接对象是需要时间和资源的，所以这种方式会明显的增加不必要的资源消耗和降低机器的吞吐能力，一个更好的解决方案是使用rdd.foreachPartition-创建一个单独的连接对象并且通过这个连接发送一个RDD中所有的数据：
+{% highlight objc %}
+dstream.foreachRDD(rdd => {
+      rdd.foreachPartition(partitionOfRecords => {
+          val connection = createNewConnection()
+          partitionOfRecords.foreach(record => connection.send(record))
+          connection.close()
+      })
+  })
+{% endhighlight %}
+但这种方法在多个RDD分区中还是会创建多个连接。
+<li>最后，下面方法是使用静态的连接池来对连接进行重用：
+{% highlight objc %}
+dstream.foreachRDD(rdd => {
+      rdd.foreachPartition(partitionOfRecords => {
+          // ConnectionPool is a static, lazily initialized pool of connections
+          val connection = ConnectionPool.getConnection()
+          partitionOfRecords.foreach(record => connection.send(record))
+          ConnectionPool.returnConnection(connection)  // return to the pool for future reuse
+      })
+  })
+{% endhighlight %}
+注意：池中的连接应该是根据需要记性懒式创建并且在一段时间之内不再使用需要将其释放，这种方式是最高效的。
+######其它需要注意的
+<li>DStream是懒式执行的，所以DStream中必须要有RDD的action操作，这样接收到的数据才会被执行，否则接收到的数据会被丢弃
+<li默认，输出操作是一个时刻执行一次操作的，并且它们的执行顺序是按应用程序中定义它们的顺序的
