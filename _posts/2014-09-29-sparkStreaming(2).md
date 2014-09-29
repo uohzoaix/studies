@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "spark之路第七课——streaming(2)"
+title: "spark之路第八课——streaming(2)"
 description: "spark学习系列第八篇"
 category: 
 - spark
