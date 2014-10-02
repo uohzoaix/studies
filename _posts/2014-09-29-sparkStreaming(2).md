@@ -38,3 +38,12 @@ spark streaming程序的运行进度也可以通过SteamingListener接口进行�
 ####减少数据的处理时间
 在spark中有一些选项是可以使数据的处理时间减少的：
 #####数据接收并行度
+从kafka，flume等数据源接收到的数据需要反序列化和存储到spark，如果数据接收成为系统的瓶颈时，这时候就需要考虑数据接收的并行度了。每个输入DStream会创建一个独立的接收者（该接受者运行在worker机器上）接收独立的数据流。同时接收多个数据流可以通过创建多个输入DStream和从数据源中接收不同分区的数据流来实现，比如可以将一个单独的kafka输入DStream接收两个topic的数据改为两个不同的kafka输入DStream，每一个只接收一个topic的数据，这就需要在workers机器上运行两个接收者了，因此就实现了并行接收数据和提高吞吐量的要求了。这里的多个DStream可以被结合在一起成为一个独立的DStream，然后转换操作就可以运用到这个独立的DStream上了：
+{% highlight objc %}
+val numStreams = 5
+val kafkaStreams = (1 to numStreams).map { i => KafkaUtils.createStream(...) }
+val unifiedStream = streamingContext.union(kafkaStreams)
+unifiedStream.print()
+{% endhighlight %}
+另一个参数需要考虑的是接收者的合并成块的间隔时间，对接收者来说，接收到的数据在存储到spark的内存之前会将数据进行合并成块，块的数量决定了处理接收到的数据的任务的数量。合并成块的间隔时间通过spark.streaming.blockInterval来设置，默认为200毫秒。  
+使用多个输入DStream接收数据的可替代做法是显式的将输入数据流进行重新分区（使用inputStream.repartition(<number of partitions>)），这种方法在会将接收到的数据在梳理之前会被分配到多个机器上。
