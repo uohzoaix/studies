@@ -74,3 +74,34 @@ RDD是不可改变和可重新计算，分布式的数据集，每个RDD会记�
 1.使用HDFS作为输入源-如果数据是存储在HDFS中，所有的数据会被重新计算，这样就不会有数据丢失了。  
 2.从网络接收数据-那些像kafka，flume等数据源，接收到的数据在集群的节点之间被复制（默认会被复制两份）。所有如果一个worker节点失效，那么系统会从剩下的那份拷贝数据重新计算。然而，如果运行网络接收者的worker节点失效的话，那么一小部分的数据会丢失，因为在某个时刻接收到的数据还没来得及被复制到其他节点上，失效后接收者会在另外一个节点重新运行并继续接收数据。  
 只要所有的数据使用继承的确定操作而成为RDD后，任何的重新计算操作都会是相同的结果。因此，所有的DStream转换操作是只有一个含义的，也就是最后的转换操作结构式相同的，即使有worker节点失效。然后，像foreachRDD输出操作有至少一个含义，也就是说在worker节点失效的情况下任何的转换数据会被多次写入外部实体中。
+####driver节点失效
+spark streaming允许streaming计算在driver节点失效的情况下能够重新使用。spark streaming会定期将元数据信息通过StreamingContext写入HDFS中，该功能可通过ssc.checkpoint(<checkpoint directory>)代码进行设置，这样当driver节点失效时，失效的StreamingContext能够从这些元数据信息中恢复并重新开始工作。  
+为了能使spark streaming程序恢复工作，必须遵守以下两点：  
+1.当程序第一次启动时，会创建一个新的StreamingContext，建立号所有的数据流后然后调用start()方法。  
+2.当程序在失败后重新启动时，会从之前的checkpoint数据在checkpoint目录（即HDFS等文件系统）中重新创建一个StreamingContext。  
+使用方法如下：
+{% highlight objc %}
+// Function to create and setup a new StreamingContext
+def functionToCreateContext(): StreamingContext = {
+    val ssc = new StreamingContext(...)   // new context
+    val lines = ssc.socketTextStream(...) // create DStreams
+    ...
+    ssc.checkpoint(checkpointDirectory)   // set checkpoint directory
+    ssc
+}
+
+// Get StreamingContext from checkpoint data or create a new one
+val context = StreamingContext.getOrCreate(checkpointDirectory, functionToCreateContext _)
+
+// Do additional setup on context that needs to be done,
+// irrespective of whether it is being started or restarted
+context. ...
+
+// Start the context
+context.start()
+context.awaitTermination()
+{% endhighlight %}
+如果checkpointDirectory目录存在的话，那么context会从checkpoint数据中重新创建，否则functionToCreateContext会被调用并创建一个新的context。  
+也可以通过new StreamingContext(checkpointDirectory)方法显式从checkpoint数据创建StreamingContext并开始相应的计算。  
+注意：如果spark streaming程序被重新编译了，必须创建一个新的StreamingContext或者JavaStreamingContext而不能从checkpoint数据重新创建，因为如果数据是在重新编译之前产生的会导致从checkpoint数据创建context失败。所以必须确保checkpoint目录在重新编译代码之后每次被显式删除。  
+spark的standalone模式会自动恢复driver节点，所以spark应用在失败后会被重新启动。这可以通过将Wordcount例子部署在standalone模式中并杀死java进程（DriverWrapper），driver会自动重新启动并且Wordcount会继续工作。其他的模式下必须手动通过其他机制重新启动driver。
