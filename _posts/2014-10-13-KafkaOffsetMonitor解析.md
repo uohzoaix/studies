@@ -3,7 +3,7 @@ layout: post
 title: "KafkaOffsetMonitor分析"
 description: "kafka监控"
 category: 
-- spark
+- kafka
 tags: []
 ---
 
@@ -610,4 +610,5 @@ offsetinfo.loadClusterViz方法在app.js中的定义为：
 			logger.info(stats.toString());
 		}
 	}
+	static class ZKStringSerializer implements ZkSerializer {		static final ZKStringSerializer instance = new ZKStringSerializer();		private ZKStringSerializer() {		}		public byte[] serialize(Object data) throws ZkMarshallingError {			if (data == null) {				throw new NullPointerException();			}			return data.toString().getBytes();		}		public Object deserialize(byte[] bytes) throws ZkMarshallingError {			try {				return bytes == null ? null : new String(bytes, "UTF-8");			} catch (UnsupportedEncodingException e) {				e.printStackTrace();			}			return null;		}		public static ZKStringSerializer getInstance() {			return instance;		}	}
  
