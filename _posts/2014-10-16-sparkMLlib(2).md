@@ -88,3 +88,59 @@ sampleByKeyExact()方法允许用户抽取确切的<math xmlns="http://www.w3.or
 	// Get an exact sample from each stratum
 	val approxSample = data.sampleByKey(withReplacement = false, fractions)
 	val exactSample = data.sampleByKeyExact(withReplacement = false, fractions)
+###假设测试
+MLlib目前支持皮尔逊的平方（<math xmlns="http://www.w3.org/1998/Math/MathML">
+<msup>
+  <mi>&#x03C7;<!-- χ --></mi>
+  <mn>2</mn>
+</msup>
+</math>）测试以得到好的和独立的结果。输入数据类型决定了测试是否是好的或独立，好的测试需要输入类型为Vector，而独立的测试需要Matrix作为输入。  
+MLlib也支持输入类型RDD[LabeledPoint]以通过平方独立测试来开启特征选择。  
+Statistics提供了运行皮尔逊平方测试的方法，下面的例子示范了如何运行和解释假设测试：
+
+	import org.apache.spark.SparkContext
+	import org.apache.spark.mllib.linalg._
+	import org.apache.spark.mllib.regression.LabeledPoint
+	import org.apache.spark.mllib.stat.Statistics._
+
+	val sc: SparkContext = ...
+
+	val vec: Vector = ... // a vector composed of the frequencies of events
+
+	// compute the goodness of fit. If a second vector to test against is not supplied as a parameter, 
+	// the test runs against a uniform distribution.  
+	val goodnessOfFitTestResult = Statistics.chiSqTest(vec)
+	println(goodnessOfFitTestResult) // summary of the test including the p-value, degrees of freedom, 
+                                 // test statistic, the method used, and the null hypothesis.
+
+	val mat: Matrix = ... // a contingency matrix
+
+	// conduct Pearson's independence test on the input contingency matrix
+	val independenceTestResult = Statistics.chiSqTest(mat) 
+	println(independenceTestResult) // summary of the test including the p-value, degrees of freedom...
+
+	val obs: RDD[LabeledPoint] = ... // (feature, label) pairs.
+
+	// The contingency table is constructed from the raw (feature, label) pairs and used to conduct
+	// the independence test. Returns an array containing the ChiSquaredTestResult for every feature 
+	// against the label.
+	val featureTestResults: Array[ChiSqTestResult] = Statistics.chiSqTest(obs)
+	var i = 1
+	featureTestResults.foreach { result =>
+    println(s"Column $i:\n$result")
+    i += 1
+	} // summary of the test
+###产生随机数
+生成随机数对随机算法，原型和性能测试是很有用的，MLlib支持使用i.i.d生成随机RDD。  
+RandomRDDs提供了生成随机double的RDD或向量RDD的工厂方法：
+
+	import org.apache.spark.SparkContext
+	import org.apache.spark.mllib.random.RandomRDDs._
+
+	val sc: SparkContext = ...
+
+	// Generate a random double RDD that contains 1 million i.i.d. values drawn from the
+	// standard normal distribution `N(0, 1)`, evenly distributed in 10 partitions.
+	val u = normalRDD(sc, 1000000L, 10)
+	// Apply a transform to get a random double RDD following `N(1, 4)`.
+	val v = u.map(x => 1.0 + 2.0 * x)
