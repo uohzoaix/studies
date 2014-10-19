@@ -210,7 +210,11 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
 </math>定义了最小化损失（如训练错误）和最小化模型复杂度（如避免过度）之间的取舍。
 ####损失函数
 下表总结了损失函数和MLlib支持的方法的变化率：
-名称|损失函数<math xmlns="http://www.w3.org/1998/Math/MathML">
+<table>
+<thead>
+<tr class="header">
+<th align="left">名称</th>
+<th align="left">损失函数<math xmlns="http://www.w3.org/1998/Math/MathML">
   <mi>L</mi>
   <mo stretchy="false">(</mo>
   <mrow class="MJX-TeXAtom-ORD">
@@ -223,9 +227,14 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mo>,</mo>
   <mi>y</mi>
   <mo stretchy="false">)</mo>
-</math>|变化率
-|:---------------|:---------------
-合页损失|<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math></th>
+<th align="left">变化率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">合页损失</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
   <mo form="prefix" movablelimits="true">max</mo>
   <mo fence="false" stretchy="false">{</mo>
   <mn>0</mn>
@@ -254,7 +263,8 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mo>+</mo>
   <mn>1</mn>
   <mo fence="false" stretchy="false">}</mo>
-</math>|<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow>
   <mo>{</mo>
   <mtable columnalign="left left" rowspacing=".2em" columnspacing="1em">
@@ -297,8 +307,11 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
     </mtr>
   </mtable>
 </mrow>
-</math>
-逻辑损失|<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math></td>
+</tr>
+<tr class="even">
+<td align="left">逻辑损失</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
   <mi>log</mi>
   <mo>&#x2061;<!-- ⁡ --></mo>
   <mo stretchy="false">(</mo>
@@ -331,7 +344,8 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mo>+</mo>
   <mn>1</mn>
   <mo fence="false" stretchy="false">}</mo>
-</math>|<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
   <mo>&#x2212;<!-- − --></mo>
   <mi>y</mi>
   <mrow>
@@ -366,8 +380,11 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mrow class="MJX-TeXAtom-ORD">
     <mi mathvariant="bold">x</mi>
   </mrow>
-</math>
-平方损失|<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math></td>
+</tr>
+<tr class="odd">
+<td align="left">平方损失</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
   <mfrac>
     <mn>1</mn>
     <mn>2</mn>
@@ -395,7 +412,8 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mrow class="MJX-TeXAtom-ORD">
     <mi mathvariant="double-struck">R</mi>
   </mrow>
-</math>|<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
   <mo stretchy="false">(</mo>
   <msup>
     <mrow class="MJX-TeXAtom-ORD">
@@ -413,5 +431,106 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mrow class="MJX-TeXAtom-ORD">
     <mi mathvariant="bold">x</mi>
   </mrow>
-</math>
+</math></td>
+</tr>
+</tbody>
+</table>
 ####正则化
+正则化的目的是为了使用简单的模型和避免过度设计，目前MLlib支持下列正则化方式：
+<table>
+<thead>
+<tr class="header">
+<th align="left">名称</th>
+<th align="left">正则化方法<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>R</mi>
+  <mo stretchy="false">(</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <mo stretchy="false">)</mo>
+</math></th>
+<th align="left">变化率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">0（未正则化）</td>
+<td align="left">0</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow class="MJX-TeXAtom-ORD">
+  <mn mathvariant="bold">0</mn>
+</mrow>
+</math></td>
+</tr>
+<tr class="even">
+<td align="left">L2</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mfrac>
+    <mn>1</mn>
+    <mn>2</mn>
+  </mfrac>
+  <mo>&#x2225;<!-- ∥ --></mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <msubsup>
+    <mo fence="false" stretchy="false">&#x2225;<!-- ∥ --></mo>
+    <mn>2</mn>
+    <mn>2</mn>
+  </msubsup>
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow class="MJX-TeXAtom-ORD">
+  <mi mathvariant="bold">w</mi>
+</mrow>
+</math></td>
+</tr>
+<tr class="odd">
+<td align="left">L1</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mo fence="false" stretchy="false">&#x2225;<!-- ∥ --></mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <msub>
+    <mo fence="false" stretchy="false">&#x2225;<!-- ∥ --></mo>
+    <mn>1</mn>
+  </msub>
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="normal">s</mi>
+    <mi mathvariant="normal">i</mi>
+    <mi mathvariant="normal">g</mi>
+    <mi mathvariant="normal">n</mi>
+  </mrow>
+  <mo stretchy="false">(</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <mo stretchy="false">)</mo>
+</math></td>
+</tr>
+</tbody>
+</table>
+表中<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="normal">s</mi>
+    <mi mathvariant="normal">i</mi>
+    <mi mathvariant="normal">g</mi>
+    <mi mathvariant="normal">n</mi>
+  </mrow>
+  <mo stretchy="false">(</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <mo stretchy="false">)</mo>
+</math>是由<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow class="MJX-TeXAtom-ORD">
+  <mi mathvariant="bold">w</mi>
+</mrow>
+</math>中所有entry的符号（<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mo>&#x00B1;<!-- ± --></mo>
+  <mn>1</mn>
+</math>）组成。
+###二分分类
