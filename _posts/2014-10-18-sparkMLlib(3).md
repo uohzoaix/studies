@@ -33,15 +33,22 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
 下面是对这些方法更详细的描述：
 ###线性方法
 ####数学表达式
-许多标准的机器学习方法可以表达为凸的优化问题，例如，找到凸函数<math xmlns="http://www.w3.org/1998/Math/MathML">
+许多标准的机器学习方法可以表达为凸的优化问题，例如，找到凸函数
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mi>f</mi>
-</math>的极小值取决于变向量<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math>
+的极小值取决于变向量
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mrow class="MJX-TeXAtom-ORD">
   <mi mathvariant="bold">w</mi>
 </mrow>
-</math>，该变向量包含<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math>
+，该变向量包含
+<math xmlns="http://www.w3.org/1998/Math/MathML">
 <mi>d</mi>
-</math>个entry，可以将该问题转换为优化问题<math xmlns="http://www.w3.org/1998/Math/MathML">
+</math>
+个entry，可以将该问题转换为优化问题
+<math xmlns="http://www.w3.org/1998/Math/MathML">
   <munder>
     <mo form="prefix" movablelimits="true">min</mo>
     <mrow class="MJX-TeXAtom-ORD">
@@ -64,7 +71,8 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
     <mi mathvariant="bold">w</mi>
   </mrow>
   <mo stretchy="false">)</mo>
-</math>，其中目标函数为如下形式：
+</math>
+，其中目标函数为如下形式：
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
 <mtable>
   <mlabeledtr>
@@ -125,7 +133,8 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   </mlabeledtr>
 </mtable>
 </math>
-其中向量<math xmlns="http://www.w3.org/1998/Math/MathML">
+其中向量
+<math xmlns="http://www.w3.org/1998/Math/MathML">
   <msub>
     <mrow class="MJX-TeXAtom-ORD">
       <mi mathvariant="bold">x</mi>
@@ -154,4 +163,5 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mrow class="MJX-TeXAtom-ORD">
     <mi mathvariant="double-struck">R</mi>
   </mrow>
-</math>是相应的标签。
+</math>
+是相应的需要预测的标签。
