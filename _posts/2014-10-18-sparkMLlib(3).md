@@ -534,3 +534,219 @@ MLlib支持多种方法用来处理二分分类，多类分类以及回归分析
   <mn>1</mn>
 </math>）组成。
 ###二分分类
+二分分类旨在将item分成两个种类：积极和消极。MLlib支持两个线性方法：线性支持向量机（SVM）和逻辑回归，这两种方法都支持L1和L2正则化变体，在MLlib中训练数据集表示为LabeledPoint的一个RDD，在本文的数学表达式中，训练标签<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>y</mi>
+</math>表示为<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mo>+</mo>
+  <mn>1</mn>
+</math>（正）和<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mo>-</mo>
+  <mn>1</mn>
+</math>（负），然而在MLlib中使用<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mn>0</mn>
+</math>来表示负的。
+####线性支持向量机
+线性SVM是大规模分类任务的标准方法，它是由损失函数组成的线性方法：
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mi>L</mi>
+  <mo stretchy="false">(</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <mo>;</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo>,</mo>
+  <mi>y</mi>
+  <mo stretchy="false">)</mo>
+  <mo>:=</mo>
+  <mo form="prefix" movablelimits="true">max</mo>
+  <mo fence="false" stretchy="false">{</mo>
+  <mn>0</mn>
+  <mo>,</mo>
+  <mn>1</mn>
+  <mo>&#x2212;<!-- − --></mo>
+  <mi>y</mi>
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo fence="false" stretchy="false">}</mo>
+  <mo>.</mo>
+</math>
+默认，线性SVM使用L2正则化来进行训练，同时也只是L1正则化，线性SVM算法输出一个SVM模型，给定表示为<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow class="MJX-TeXAtom-ORD">
+  <mi mathvariant="bold">x</mi>
+</mrow>
+</math>的新数据点，那么模型可通过<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+</math>进行预测，默认如果<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo>&#x2265;<!-- ≥ --></mo>
+  <mn>0</mn>
+</math>那么输出的是正的，否则是负的。
+####逻辑回归
+逻辑回归在预测二分答复中应用广泛，表达式为：
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mi>L</mi>
+  <mo stretchy="false">(</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <mo>;</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo>,</mo>
+  <mi>y</mi>
+  <mo stretchy="false">)</mo>
+  <mo>:=</mo>
+  <mi>log</mi>
+  <mo>&#x2061;<!-- ⁡ --></mo>
+  <mo stretchy="false">(</mo>
+  <mn>1</mn>
+  <mo>+</mo>
+  <mi>exp</mi>
+  <mo>&#x2061;<!-- ⁡ --></mo>
+  <mo stretchy="false">(</mo>
+  <mo>&#x2212;<!-- − --></mo>
+  <mi>y</mi>
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo stretchy="false">)</mo>
+  <mo stretchy="false">)</mo>
+  <mo>.</mo>
+</math>
+逻辑回归算法输出一个逻辑回归模型，对于给定的<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow class="MJX-TeXAtom-ORD">
+  <mi mathvariant="bold">x</mi>
+</mrow>
+</math>数据点，模型可通过应用逻辑函数
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="normal">f</mi>
+  </mrow>
+  <mo stretchy="false">(</mo>
+  <mi>z</mi>
+  <mo stretchy="false">)</mo>
+  <mo>=</mo>
+  <mfrac>
+    <mn>1</mn>
+    <mrow>
+      <mn>1</mn>
+      <mo>+</mo>
+      <msup>
+        <mi>e</mi>
+        <mrow class="MJX-TeXAtom-ORD">
+          <mo>&#x2212;<!-- − --></mo>
+          <mi>z</mi>
+        </mrow>
+      </msup>
+    </mrow>
+  </mfrac>
+</math>
+进行预测，其中<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>z</mi>
+  <mo>=</mo>
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+</math>。默认如果<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="normal">f</mi>
+  </mrow>
+  <mo stretchy="false">(</mo>
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mi>x</mi>
+  <mo stretchy="false">)</mo>
+  <mo>&gt;</mo>
+  <mn>0.5</mn>
+</math>则输出正的，否则输出负的。
+####评估指标
+MLlib支持常见的二分分类评估指标，包括精确，召回，F值，ROC，精密召回曲线和AUC，AUC在比较多个模型的性能是很常用的，精确/召回/F值可以帮助决定在预测中适当的下限值。  
+下面的例子说明了如何加载数据集，在数据集上执行训练算法和使用结果模型进行预测：
+
+	import org.apache.spark.SparkContext
+	import org.apache.spark.mllib.classification.SVMWithSGD
+	import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
+	import org.apache.spark.mllib.regression.LabeledPoint
+	import org.apache.spark.mllib.linalg.Vectors
+	import org.apache.spark.mllib.util.MLUtils
+
+	// Load training data in LIBSVM format.
+	val data = MLUtils.loadLibSVMFile(sc, "data/mllib/sample_libsvm_data.txt")
+
+	// Split data into training (60%) and test (40%).
+	val splits = data.randomSplit(Array(0.6, 0.4), seed = 11L)
+	val training = splits(0).cache()
+	val test = splits(1)
+
+	// Run training algorithm to build the model
+	val numIterations = 100
+	val model = SVMWithSGD.train(training, numIterations)
+
+	// Clear the default threshold.
+	model.clearThreshold()
+
+	// Compute raw scores on the test set. 
+	val scoreAndLabels = test.map { point =>
+  		val score = model.predict(point.features)
+  		(score, point.label)
+	}
+
+	// Get evaluation metrics.
+	val metrics = new BinaryClassificationMetrics(scoreAndLabels)
+	val auROC = metrics.areaUnderROC()
+
+	println("Area under ROC = " + auROC)
+SVMWithSGD.train()方法默认会使用正则参数处理L2正则化，如果需要配置该算法，可以创建新对象并调用set方法来自定义SVMWithSGD，所有的其他MLlib算法也支持这种方式来进行自定义。例如下面的代码产生一个L1正则化变体，它使用了正则参数1.0，并运行200次训练算法：
+
+	import org.apache.spark.mllib.optimization.L1Updater
+
+	val svmAlg = new SVMWithSGD()
+	svmAlg.optimizer.
+  		setNumIterations(200).
+  		setRegParam(0.1).
+  		setUpdater(new L1Updater)
+	val modelL1 = svmAlg.run(training)
+LogisticRegressionWithSGD的用法与SVMWithSGD类似。
