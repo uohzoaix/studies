@@ -750,3 +750,102 @@ SVMWithSGD.train()方法默认会使用正则参数处理L2正则化，如果需
   		setUpdater(new L1Updater)
 	val modelL1 = svmAlg.run(training)
 LogisticRegressionWithSGD的用法与SVMWithSGD类似。
+###线性最小二乘法，套索，岭回归
+线性最小二乘法在处理回归问题是最常见的算法，表达式为：
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mi>L</mi>
+  <mo stretchy="false">(</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">w</mi>
+  </mrow>
+  <mo>;</mo>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo>,</mo>
+  <mi>y</mi>
+  <mo stretchy="false">)</mo>
+  <mo>:=</mo>
+  <mfrac>
+    <mn>1</mn>
+    <mn>2</mn>
+  </mfrac>
+  <mo stretchy="false">(</mo>
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi mathvariant="bold">x</mi>
+  </mrow>
+  <mo>&#x2212;<!-- − --></mo>
+  <mi>y</mi>
+  <msup>
+    <mo stretchy="false">)</mo>
+    <mn>2</mn>
+  </msup>
+  <mo>.</mo>
+</math>
+很多相关的回归方法衍生于不同类型的正则化：普通最小二乘法或线性最小二乘法没有使用正则化；岭回归使用L2正则化；套索使用L1正则化。对于所有的这些模型来说，平均损失或训练错误：<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mfrac>
+    <mn>1</mn>
+    <mi>n</mi>
+  </mfrac>
+  <munderover>
+    <mo>&#x2211;<!-- ∑ --></mo>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+      <mo>=</mo>
+      <mn>1</mn>
+    </mrow>
+    <mi>n</mi>
+  </munderover>
+  <mo stretchy="false">(</mo>
+  <msup>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi mathvariant="bold">w</mi>
+    </mrow>
+    <mi>T</mi>
+  </msup>
+  <msub>
+    <mi>x</mi>
+    <mi>i</mi>
+  </msub>
+  <mo>&#x2212;<!-- − --></mo>
+  <msub>
+    <mi>y</mi>
+    <mi>i</mi>
+  </msub>
+  <msup>
+    <mo stretchy="false">)</mo>
+    <mn>2</mn>
+  </msup>
+</math>被称为均方差。  
+下面的例子解释了如果加载训练数据，并将数据解析为LabeledPoint的RDD。使用LinearRegressionWithSGD创建一个简单的线性模型来预测标签值，最后会计算均方差：
+
+	import org.apache.spark.mllib.regression.LinearRegressionWithSGD
+	import org.apache.spark.mllib.regression.LabeledPoint
+	import org.apache.spark.mllib.linalg.Vectors
+
+	// Load and parse the data
+	val data = sc.textFile("data/mllib/ridge-data/lpsa.data")
+	val parsedData = data.map { line =>
+  		val parts = line.split(',')
+  		LabeledPoint(parts(0).toDouble, Vectors.dense(parts(1).split(' 		').map(_.toDouble)))
+	}
+
+	// Building the model
+	val numIterations = 100
+	val model = LinearRegressionWithSGD.train(parsedData, numIterations)
+
+	// Evaluate model on training examples and compute training error
+	val valuesAndPreds = parsedData.map { point =>
+  		val prediction = model.predict(point.features)
+  		(point.label, prediction)
+	}
+	val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()
+	println("training Mean Squared Error = " + MSE)
+RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似。
+###流式线性回归
