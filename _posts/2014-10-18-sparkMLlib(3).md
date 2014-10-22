@@ -873,3 +873,4 @@ RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似�
 	ssc.start()
 	ssc.awaitTermination()
 现在就可以看到文本文件保存到训练和测试目录中了，文件的每行形式为(y,[x1,x2,x3])，其中y表示标签，x1,x2,x3表示特征。如果有新的文件放入/training/data/dir中模型就会自动更新，如果有新的文件放入/testing/data/dir中就会看到预测结果，如果测试目录中的数据越多，那么预测就会更准确。
+###决策树
