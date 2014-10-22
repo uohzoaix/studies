@@ -849,3 +849,27 @@ LogisticRegressionWithSGD的用法与SVMWithSGD类似。
 	println("training Mean Squared Error = " + MSE)
 RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似。
 ###流式线性回归
+当数据是以流的方式进来时，那么选择合适的回归模型是很有用的，MLlib目前支持使用普通最小二乘法实现流式回归。  
+下面的例子解释了如果加载训练数据和从两个不同的输入流测试数据，将流解析为标签点，对第一个流使用线性回归模型，并预测第二个流。  
+首先导入必要的类来解析输入数据并创建模型：
+
+	import org.apache.spark.mllib.linalg.Vectors
+	import org.apache.spark.mllib.regression.LabeledPoint
+	import org.apache.spark.mllib.regression.StreamingLinearRegressionWithSGD
+然后创建输入流来训练和测试数据，在这个例子中使用了标签点来训练和测试流，但是在实际中可能更倾向于使用未标记的向量来测试数据：
+
+	val trainingData = ssc.textFileStream('/training/data/dir').map(LabeledPoint.parse)
+	val testData = ssc.textFileStream('/testing/data/dir').map(LabeledPoint.parse)
+接着将模型的权重初始化为0：
+
+	val numFeatures = 3
+	val model = new StreamingLinearRegressionWithSGD()
+    	.setInitialWeights(Vectors.zeros(numFeatures))
+最后将流进行注册来训练和测试并启动任务：
+
+	model.trainOn(trainingData)
+	model.predictOnValues(testData.map(lp => (lp.label, lp.features))).print()
+
+	ssc.start()
+	ssc.awaitTermination()
+现在就可以看到文本文件保存到训练和测试目录中了，文件的每行形式为(y,[x1,x2,x3])，其中y表示标签，x1,x2,x3表示特征。如果有新的文件放入/training/data/dir中模型就会自动更新，如果有新的文件放入/testing/data/dir中就会看到预测结果，如果测试目录中的数据越多，那么预测就会更准确。
