@@ -874,3 +874,31 @@ RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似�
 	ssc.awaitTermination()
 现在就可以看到文本文件保存到训练和测试目录中了，文件的每行形式为(y,[x1,x2,x3])，其中y表示标签，x1,x2,x3表示特征。如果有新的文件放入/training/data/dir中模型就会自动更新，如果有新的文件放入/testing/data/dir中就会看到预测结果，如果测试目录中的数据越多，那么预测就会更准确。
 ###决策树
+决策树算法在机器学习中用到的地方很多，因为它容易学习并易于处理类别特征。MLlib支持使用连续和类别特征来处理二分和多类分类和回归，实现的方式是使用行来对数据进行分区，这样就允许多个实例来对数据进行分布式训练。
+####基本算法
+决策树是一种对特征空间进行二分分区的贪婪算法，该树会对每个最底的（叶子）分区预测相同的标签，每个分区会被从一系列可能的split中贪婪的选择最适合的split，这样可以使树节点的信息能够增长到最大。换句话说，在树节点选择出来的split会从集合<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <munder>
+    <mi>argmax</mi>
+    <mi>s</mi>
+  </munder>
+  <mi>I</mi>
+  <mi>G</mi>
+  <mo stretchy="false">(</mo>
+  <mi>D</mi>
+  <mo>,</mo>
+  <mi>s</mi>
+  <mo stretchy="false">)</mo>
+</math>中选择出来，其中<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>I</mi>
+  <mi>G</mi>
+  <mo stretchy="false">(</mo>
+  <mi>D</mi>
+  <mo>,</mo>
+  <mi>s</mi>
+  <mo stretchy="false">)</mo>
+</math>是信息增长当split<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>s</mi>
+</math>被应用到数据集<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>D</mi>
+</math>中。
+####节点杂质和信息收益
