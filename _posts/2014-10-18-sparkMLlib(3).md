@@ -1245,4 +1245,9 @@ RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似�
   <mo>&#x2212;<!-- − --></mo>
   <mn>1</mn>
 </math>种split候选会被作为结果使用。
-####停止规则
+#####停止规则
+递归树结构会在以下条件出现时停止：  
+1.节点深度和maxDepth训练参数相同的时候  
+2.在一个节点中没有split候选会导致信息收益
+####实现细节
+#####最大内存要求
