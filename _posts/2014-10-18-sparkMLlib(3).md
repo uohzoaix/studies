@@ -1191,3 +1191,58 @@ RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似�
   <mo stretchy="false">)</mo>
 </math>。
 ####split候选
+#####连续特征
+对于在单台机器上实现的小数据集来说，对于每个连续特征的split候选通常都是特征的唯一值，很多实现会将特征值排序然后使用有序的唯一值作为split候选，这样可使树计算的速度加快。  
+将特征值进行排序对于大的分布式数据集来说是很昂贵的，该方法会通过在数据的抽样上计算分位数来计算一个大约的split候选集。有序的split会创建bins并且最大的bin数量会被指定为maxBins参数值。  
+注意：bins的数量不能比实例<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>N</mi>
+</math>的数量大（在默认值为100的情况下该情形是很罕见的）。树算法会自动减少bins的数量如果条件为满足的话。
+#####类别特征
+对于一个拥有<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>M</mi>
+</math>个可能值（类别）的类别特征来说，这时可能会有<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msup>
+    <mn>2</mn>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>M</mi>
+      <mo>&#x2212;<!-- − --></mo>
+      <mn>1</mn>
+    </mrow>
+  </msup>
+  <mo>&#x2212;<!-- − --></mo>
+  <mn>1</mn>
+</math>个split候选，对于二分分类和回归来说，可以通过使用平均标签排序类别特征来将split候选减少为<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>M</mi>
+  <mo>&#x2212;<!-- − --></mo>
+  <mn>1</mn>
+</math>。例如，对于一个包含类别A，B，C（相应的标签为0.2，0.6，0.4）的类别特征的二分分类问题来说，类别特征会被排序为A，C，B，两个split候选为A | C, B和A , C | B，其中|表示split。  
+在多类分类中，所有的<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msup>
+    <mn>2</mn>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>M</mi>
+      <mo>&#x2212;<!-- − --></mo>
+      <mn>1</mn>
+    </mrow>
+  </msup>
+  <mo>&#x2212;<!-- − --></mo>
+  <mn>1</mn>
+</math>可能的split都有可能被使用，当<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msup>
+    <mn>2</mn>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>M</mi>
+      <mo>&#x2212;<!-- − --></mo>
+      <mn>1</mn>
+    </mrow>
+  </msup>
+  <mo>&#x2212;<!-- − --></mo>
+  <mn>1</mn>
+</math>大于maxBins参数，这时会使用一个和二分分类或回归类似的方法。<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>M</mi>
+</math>类别特征值会通过杂质进行排序，<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>M</mi>
+  <mo>&#x2212;<!-- − --></mo>
+  <mn>1</mn>
+</math>种split候选会被作为结果使用。
+####停止规则
