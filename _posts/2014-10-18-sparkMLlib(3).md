@@ -902,3 +902,292 @@ RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似�
 <mi>D</mi>
 </math>中。
 ####节点杂质和信息收益
+节点杂质是测量节点同质化的工具，当前实现提供了两个分类杂质测量和一个回归杂质测量。
+<table>
+<thead>
+<tr class="header">
+<th align="left">杂志名</th>
+<th align="left">任务</th>
+<th align="left">表达式</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Gini杂质</td>
+<td align="left">分类</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <munderover>
+    <mo>&#x2211;<!-- ∑ --></mo>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+      <mo>=</mo>
+      <mn>1</mn>
+    </mrow>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>M</mi>
+    </mrow>
+  </munderover>
+  <msub>
+    <mi>f</mi>
+    <mi>i</mi>
+  </msub>
+  <mo stretchy="false">(</mo>
+  <mn>1</mn>
+  <mo>&#x2212;<!-- − --></mo>
+  <msub>
+    <mi>f</mi>
+    <mi>i</mi>
+  </msub>
+  <mo stretchy="false">)</mo>
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>f</mi>
+  <mi>i</mi>
+</msub>
+</math>是标签<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>i</mi>
+</math>的频率，<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>M</mi>
+</math>是不同标签的数量</td>
+</tr>
+<tr class="even">
+<td align="left">熵</td>
+<td align="left">分类</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <munderover>
+    <mo>&#x2211;<!-- ∑ --></mo>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+      <mo>=</mo>
+      <mn>1</mn>
+    </mrow>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>M</mi>
+    </mrow>
+  </munderover>
+  <mo>&#x2212;<!-- − --></mo>
+  <msub>
+    <mi>f</mi>
+    <mi>i</mi>
+  </msub>
+  <mi>l</mi>
+  <mi>o</mi>
+  <mi>g</mi>
+  <mo stretchy="false">(</mo>
+  <msub>
+    <mi>f</mi>
+    <mi>i</mi>
+  </msub>
+  <mo stretchy="false">)</mo>
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>f</mi>
+  <mi>i</mi>
+</msub>
+</math>是标签<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>i</mi>
+</math>的频率，<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>M</mi>
+</math>是不同标签的数量</td>
+</tr>
+<tr class="odd">
+<td align="left">方差</td>
+<td align="left">回归</td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mfrac>
+    <mn>1</mn>
+    <mi>n</mi>
+  </mfrac>
+  <munderover>
+    <mo>&#x2211;<!-- ∑ --></mo>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+      <mo>=</mo>
+      <mn>1</mn>
+    </mrow>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>N</mi>
+    </mrow>
+  </munderover>
+  <mo stretchy="false">(</mo>
+  <msub>
+    <mi>x</mi>
+    <mi>i</mi>
+  </msub>
+  <mo>&#x2212;<!-- − --></mo>
+  <mi>&#x03BC;<!-- μ --></mi>
+  <msup>
+    <mo stretchy="false">)</mo>
+    <mn>2</mn>
+  </msup>
+</math></td>
+<td align="left"><math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>y</mi>
+  <mi>i</mi>
+</msub>
+</math>是一个实例的标签，<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>N</mi>
+</math>是实例的数量，<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>&#x03BC;<!-- μ --></mi>
+</math>是<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mfrac>
+    <mn>1</mn>
+    <mi>N</mi>
+  </mfrac>
+  <munderover>
+    <mo>&#x2211;<!-- ∑ --></mo>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>i</mi>
+      <mo>=</mo>
+      <mn>1</mn>
+    </mrow>
+    <mi>n</mi>
+  </munderover>
+  <msub>
+    <mi>x</mi>
+    <mi>i</mi>
+  </msub>
+</math>计算出来的平均值</td>
+</tr>
+</tbody>
+</table>
+信息收益是父节点杂质和两个子节点杂质的权重和之间的差异。假设<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>s</mi>
+</math>将大小为<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>N</mi>
+</math>的数据集<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>D</mi>
+</math>分成大小为<math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>N</mi>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi>l</mi>
+    <mi>e</mi>
+    <mi>f</mi>
+    <mi>t</mi>
+  </mrow>
+</msub>
+</math>的<math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>D</mi>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi>l</mi>
+    <mi>e</mi>
+    <mi>f</mi>
+    <mi>t</mi>
+  </mrow>
+</msub>
+</math>和大小为<math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>N</mi>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi>r</mi>
+    <mi>i</mi>
+    <mi>g</mi>
+    <mi>h</mi>
+    <mi>t</mi>
+  </mrow>
+</msub>
+</math>的<math xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+  <mi>D</mi>
+  <mrow class="MJX-TeXAtom-ORD">
+    <mi>r</mi>
+    <mi>i</mi>
+    <mi>g</mi>
+    <mi>h</mi>
+    <mi>t</mi>
+  </mrow>
+</msub>
+</math>，信息收益为<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>I</mi>
+  <mi>G</mi>
+  <mo stretchy="false">(</mo>
+  <mi>D</mi>
+  <mo>,</mo>
+  <mi>s</mi>
+  <mo stretchy="false">)</mo>
+  <mo>=</mo>
+  <mi>I</mi>
+  <mi>m</mi>
+  <mi>p</mi>
+  <mi>u</mi>
+  <mi>r</mi>
+  <mi>i</mi>
+  <mi>t</mi>
+  <mi>y</mi>
+  <mo stretchy="false">(</mo>
+  <mi>D</mi>
+  <mo stretchy="false">)</mo>
+  <mo>&#x2212;<!-- − --></mo>
+  <mfrac>
+    <msub>
+      <mi>N</mi>
+      <mrow class="MJX-TeXAtom-ORD">
+        <mi>l</mi>
+        <mi>e</mi>
+        <mi>f</mi>
+        <mi>t</mi>
+      </mrow>
+    </msub>
+    <mi>N</mi>
+  </mfrac>
+  <mi>I</mi>
+  <mi>m</mi>
+  <mi>p</mi>
+  <mi>u</mi>
+  <mi>r</mi>
+  <mi>i</mi>
+  <mi>t</mi>
+  <mi>y</mi>
+  <mo stretchy="false">(</mo>
+  <msub>
+    <mi>D</mi>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>l</mi>
+      <mi>e</mi>
+      <mi>f</mi>
+      <mi>t</mi>
+    </mrow>
+  </msub>
+  <mo stretchy="false">)</mo>
+  <mo>&#x2212;<!-- − --></mo>
+  <mfrac>
+    <msub>
+      <mi>N</mi>
+      <mrow class="MJX-TeXAtom-ORD">
+        <mi>r</mi>
+        <mi>i</mi>
+        <mi>g</mi>
+        <mi>h</mi>
+        <mi>t</mi>
+      </mrow>
+    </msub>
+    <mi>N</mi>
+  </mfrac>
+  <mi>I</mi>
+  <mi>m</mi>
+  <mi>p</mi>
+  <mi>u</mi>
+  <mi>r</mi>
+  <mi>i</mi>
+  <mi>t</mi>
+  <mi>y</mi>
+  <mo stretchy="false">(</mo>
+  <msub>
+    <mi>D</mi>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mi>r</mi>
+      <mi>i</mi>
+      <mi>g</mi>
+      <mi>h</mi>
+      <mi>t</mi>
+    </mrow>
+  </msub>
+  <mo stretchy="false">)</mo>
+</math>。
+####split候选
