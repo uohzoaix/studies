@@ -1251,3 +1251,67 @@ RidgeRegressionWithSGD和LassoWithSGD的用法与LinearRegressionWithSGD类似�
 2.在一个节点中没有split候选会导致信息收益
 ####实现细节
 #####最大内存要求
+为了能够快速处理，决策树算法会同时在树的每级上处理图计算，这会导致在更深的树的级上需要有更多的内存，这将潜在地会出现内存溢出错误，为减缓该问题，可以在worker中使用maxMemoryInMB训练参数来指定图计算的最大内存使用量。该参数的默认值会保守的设置为128MB来使决策算法能够在大部分场景中运行，一旦某个计算的内存需求达到了该值，那么节点上的训练任务会被分成多个更小的任务。  
+注意：如果你有大量的内存，那么增加maxMemoryInMB的值会使训练更快并减少数据的传递。
+#####装载特征值
+加大maxBins的值允许算法使用更多的split候选值并会使split决策更加细粒度，然而，也会增加计算量和通信量。maxBins的值必须大于等于类别特征中<math xmlns="http://www.w3.org/1998/Math/MathML">
+<mi>M</mi>
+</math>类别的最大值。
+####例子
+#####分类
+下面的例子描述了如何加载LIBSVM数据文件，并将该文件解析为LabeledPoint的RDD，然后使用决策树来处理分类，该决策树使用Gini杂质作为杂质测量，树的最大深度为5.训练错误用来测量该算法的精确度。
+
+	import org.apache.spark.mllib.tree.DecisionTree
+	import org.apache.spark.mllib.util.MLUtils
+
+	// Load and parse the data file.
+	// Cache the data since we will use it again to compute training error.
+	val data = MLUtils.loadLibSVMFile(sc, "data/mllib/sample_libsvm_data.txt").cache()
+
+	// Train a DecisionTree model.
+	//  Empty categoricalFeaturesInfo indicates all features are continuous.
+	val numClasses = 2
+	val categoricalFeaturesInfo = Map[Int, Int]()
+	val impurity = "gini"
+	val maxDepth = 5
+	val maxBins = 100
+
+	val model = DecisionTree.trainClassifier(data, numClasses, categoricalFeaturesInfo, impurity,
+  		maxDepth, maxBins)
+
+	// Evaluate model on training instances and compute training error
+	val labelAndPreds = data.map { point =>
+  		val prediction = model.predict(point.features)
+  		(point.label, prediction)
+	}
+	val trainErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / data.count
+	println("Training Error = " + trainErr)
+	println("Learned classification tree model:\n" + model)
+#####回归
+下面的例子是处理回归的例子，决策树使用方差作为杂质测量方法，平均平方误差用来计算拟合度。
+
+	import org.apache.spark.mllib.tree.DecisionTree
+	import org.apache.spark.mllib.util.MLUtils
+
+	// Load and parse the data file.
+	// Cache the data since we will use it again to compute training error.
+	val data = MLUtils.loadLibSVMFile(sc, "data/mllib/sample_libsvm_data.txt").cache()
+
+	// Train a DecisionTree model.
+	//  Empty categoricalFeaturesInfo indicates all features are continuous.
+	val categoricalFeaturesInfo = Map[Int, Int]()
+	val impurity = "variance"
+	val maxDepth = 5
+	val maxBins = 100
+
+	val model = DecisionTree.trainRegressor(data, categoricalFeaturesInfo, impurity,
+  		maxDepth, maxBins)
+
+	// Evaluate model on training instances and compute training error
+	val labelsAndPredictions = data.map { point =>
+  		val prediction = model.predict(point.features)
+  		(point.label, prediction)
+	}
+	val trainMSE = labelsAndPredictions.map{ case(v, p) => math.pow((v - p), 2)}.mean()
+	println("Training Mean Squared Error = " + trainMSE)
+	println("Learned regression tree model:\n" + model)
