@@ -1,3 +1,13 @@
+---
+layout: post
+title: "kafka之SocketServer讲解"
+description: ""
+category: 
+- kafka
+tags: []
+---
+
+
 kafka在启动之初会初始化KafkaServer类，当集群中有多个broker时，会实例化多个KafkaServer，该类描述了一个broker的生命周期，除此之外，还会初始化各类Manager，比如与log（数据）相关的：LogManager，OffsetManager，ReplicaManager，这三个Manager都是与kafka的数据打交道的，LogManager主要管理真实的数据（MessageSet）及数据索引(Index)，OffsetManager主要管理生产者和消费者生产或消费数据的偏移量以决定下次生产或消费的位置，ReplicaManager主要管理数据在集群当中的复制行为，一份数据可以在集群中有多个备份。除了Manager之外还有几个比较重要的概念：KafkaController（特别重要，处理集群的资源调度），SocketServer（用于处理网络请求，包括生产数据及消费数据等请求）。本文主要讲解SocketServer，KafkaController下篇文章再来讲解。
 
 同理，SocketServer也是每个broker会有一个实例，每个SocketServer实例包含一个Acceptor线程（接收新连接），N个Processor线程（每个Processor线程包含一个Selector用来接收socket请求），M个Handler线程（处理Processor的请求并将处理结果发送给Processor）。
