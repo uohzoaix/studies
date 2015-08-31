@@ -234,7 +234,7 @@ onPreferredReplicaElection方法的定义为：
       }
     }
 
-DeleteTopicsThread线程主要做两件事：
+DeleteTopicsThread线程主要做三件事：
 
 （1）.向所有的broker发送UpdateMetadata请求，以使broker不再接受待删除的topic的请求
 
@@ -268,3 +268,172 @@ DeleteTopicsThread线程主要做两件事：
 	      }
 	    }
     }
+6.为/brokers/ids注册BrokerChangeListener，/brokers/ids路径的数据由KafkaHealthcheck类写入，该类的startup方法会在KafkaServer中被调用，将当前的brokerid写入该路径中。当有broker增减时即/brokers/ids路径会有子路径发生变化就会触发该listener的handleChildChange方法：
+
+	def handleChildChange(parentPath : String, currentBrokerList : java.util.List[String]) {
+      info("Broker change listener fired for path %s with children %s".format(parentPath, currentBrokerList.mkString(",")))
+      inLock(controllerContext.controllerLock) {
+        if (hasStarted.get) {
+          ControllerStats.leaderElectionTimer.time {
+            try {
+              val curBrokerIds = currentBrokerList.map(_.toInt).toSet
+              //新增的broker
+              val newBrokerIds = curBrokerIds -- controllerContext.liveOrShuttingDownBrokerIds
+              val newBrokerInfo = newBrokerIds.map(ZkUtils.getBrokerInfo(zkClient, _))
+              val newBrokers = newBrokerInfo.filter(_.isDefined).map(_.get)
+              //要删除的broker
+              val deadBrokerIds = controllerContext.liveOrShuttingDownBrokerIds -- curBrokerIds
+              //更新内存中broker数据
+              controllerContext.liveBrokers = curBrokerIds.map(ZkUtils.getBrokerInfo(zkClient, _)).filter(_.isDefined).map(_.get)
+              info("Newly added brokers: %s, deleted brokers: %s, all live brokers: %s"
+                .format(newBrokerIds.mkString(","), deadBrokerIds.mkString(","), controllerContext.liveBrokerIds.mkString(",")))
+              //创建新增broker的channel,用于发送和接收数据
+              newBrokers.foreach(controllerContext.controllerChannelManager.addBroker(_))
+              //删除待删broker对应的channel
+              deadBrokerIds.foreach(controllerContext.controllerChannelManager.removeBroker(_))
+              if(newBrokerIds.size > 0)
+                controller.onBrokerStartup(newBrokerIds.toSeq)
+              if(deadBrokerIds.size > 0)
+                controller.onBrokerFailure(deadBrokerIds.toSeq)
+            } catch {
+              case e: Throwable => error("Error while handling broker changes", e)
+            }
+          }
+        }
+      }
+    }
+该方法中的onBrokerStartup和onBrokerFailure方法比较重要，这两个方法确保partition和replica在集群中动态发生变化。
+
+onBrokerStartup方法主要做下面几件事情：
+
+（1）向新增的broker发送UpdateMetadata请求，该请求会修改broker的一些内存数据，比如partition及replica的分配情况。
+
+（2）将新增broker对应的replica状态置为Online
+
+（3）将之前该broker被置为New或Offline的partition的状态重新置为Online
+
+（4）将新增broker中正在分配partition的topic重新分配partition（onPartitionReassignment）。
+
+（5）删除新增broker中需要删除的topic。
+
+onBrokerFailure方法主要做一下几件事情：
+
+（1）将partition的leader在将要去除的broker中的那些partition的状态置为Offline。
+
+（2）将那些在需要去除的broker中但不需要删除的topic对应的broker的状态置为Offline。
+
+（3）删除那些需要删除的topic。
+
+7.初始化ControllerContext，包括当前可用broker，所有topic，partition及其replica分配情况，partition的leaderIsr信息等数据：
+
+	private def initializeControllerContext() {
+	    // update controller cache with delete topic information
+	    controllerContext.liveBrokers = ZkUtils.getAllBrokersInCluster(zkClient).toSet
+	    controllerContext.allTopics = ZkUtils.getAllTopics(zkClient).toSet
+	    controllerContext.partitionReplicaAssignment = ZkUtils.getReplicaAssignmentForTopics(zkClient, controllerContext.allTopics.toSeq)
+	    controllerContext.partitionLeadershipInfo = new mutable.HashMap[TopicAndPartition, LeaderIsrAndControllerEpoch]
+	    controllerContext.shuttingDownBrokerIds = mutable.Set.empty[Int]
+	    // update the leader and isr cache for all existing partitions from Zookeeper
+	    //将zk中的leaderIsr信息放入partitionLeadershipInfo中
+	    updateLeaderAndIsrCache()
+	    // start the channel manager
+	    startChannelManager()
+	    //更新partitionsUndergoingPreferredReplicaElection的数据，保留可以选举leader的partition
+	    initializePreferredReplicaElection()
+	    //更新partitionsBeingReassigned的数据，保留可以分配replica的partition
+	    initializePartitionReassignment()
+	    //初始化TopicDeletionManager
+	    initializeTopicDeletion()
+	    info("Currently active brokers in the cluster: %s".format(controllerContext.liveBrokerIds))
+	    info("Currently shutting brokers in the cluster: %s".format(controllerContext.shuttingDownBrokerIds))
+	    info("Current list of topics in the cluster: %s".format(controllerContext.allTopics))
+    }
+8.为所有topic（路径为/brokers/topics/xxx）注册AddPartitionsListener，当某个topic的数据发生变化时就会触发handleDataChange方法：
+
+	def handleDataChange(dataPath : String, data: Object) {
+      inLock(controllerContext.controllerLock) {
+        try {
+          info("Add Partition triggered " + data.toString + " for path " + dataPath)
+          val partitionReplicaAssignment = ZkUtils.getReplicaAssignmentForTopics(zkClient, List(topic))
+          //新增的partition
+          val partitionsToBeAdded = partitionReplicaAssignment.filter(p =>
+            !controllerContext.partitionReplicaAssignment.contains(p._1))
+          if(controller.deleteTopicManager.isTopicQueuedUpForDeletion(topic))
+            error("Skipping adding partitions %s for topic %s since it is currently being deleted"
+                  .format(partitionsToBeAdded.map(_._1.partition).mkString(","), topic))
+          else {
+            if (partitionsToBeAdded.size > 0) {
+              info("New partitions to be added %s".format(partitionsToBeAdded))
+              //将新增partition的状态置为Online
+              controller.onNewPartitionCreation(partitionsToBeAdded.keySet.toSet)
+            }
+          }
+        } catch {
+          case e: Throwable => error("Error while handling add partitions for data path " + dataPath, e )
+        }
+      }
+    }
+9.启动checkAndTriggerPartitionRebalance线程，该线程主要任务是检查当前集群中topic的leader replica与分配的replicas的第一个不同的topic数量是否占到总topic的数量的指定比例，如果占到了就为这些topic重新选取leader replica：
+
+	private def checkAndTriggerPartitionRebalance(): Unit = {
+	    if (isActive()) {
+	      trace("checking need to trigger partition rebalance")
+	      // get all the active brokers
+	      var preferredReplicasForTopicsByBrokers: Map[Int, Map[TopicAndPartition, Seq[Int]]] = null
+	      inLock(controllerContext.controllerLock) {
+	        preferredReplicasForTopicsByBrokers =
+	          //topic-0:[1,2] topic-1:[1,2,3] topic-2:[2,3]
+	          //1:{topic-0:[1,2],topic-1:[1,2,3]} 2:{topic-2:[2,3]}
+	          //按分配的replica的第一个元素进行groupBy
+	          controllerContext.partitionReplicaAssignment.filterNot(p => deleteTopicManager.isTopicQueuedUpForDeletion(p._1.topic)).groupBy {
+	            case(topicAndPartition, assignedReplicas) => assignedReplicas.head
+	          }
+	      }
+	      debug("preferred replicas by broker " + preferredReplicasForTopicsByBrokers)
+	      // for each broker, check if a preferred replica election needs to be triggered
+	      preferredReplicasForTopicsByBrokers.foreach {
+	        //这里的leaderBroker指的是assignedReplicas.head，即第一个replica作为leader
+	        case(leaderBroker, topicAndPartitionsForBroker) => {
+	          var imbalanceRatio: Double = 0
+	          var topicsNotInPreferredReplica: Map[TopicAndPartition, Seq[Int]] = null
+	          inLock(controllerContext.controllerLock) {
+	            //获取topic当前leader与分配的replica第一个元素不同的topic
+	            topicsNotInPreferredReplica =
+	              topicAndPartitionsForBroker.filter {
+	                case(topicPartition, replicas) => {
+	                  controllerContext.partitionLeadershipInfo.contains(topicPartition) &&
+	                  controllerContext.partitionLeadershipInfo(topicPartition).leaderAndIsr.leader != leaderBroker
+	                }
+	              }
+	            debug("topics not in preferred replica " + topicsNotInPreferredReplica)
+	            //broker下所有的topic数量
+	            val totalTopicPartitionsForBroker = topicAndPartitionsForBroker.size
+	            val totalTopicPartitionsNotLedByBroker = topicsNotInPreferredReplica.size
+	            imbalanceRatio = totalTopicPartitionsNotLedByBroker.toDouble / totalTopicPartitionsForBroker
+	            trace("leader imbalance ratio for broker %d is %f".format(leaderBroker, imbalanceRatio))
+	          }
+	          // check ratio and if greater than desired ratio, trigger a rebalance for the topic partitions
+	          // that need to be on this broker
+	          if (imbalanceRatio > (config.leaderImbalancePerBrokerPercentage.toDouble / 100)) {
+	            topicsNotInPreferredReplica.foreach {
+	              case(topicPartition, replicas) => {
+	                inLock(controllerContext.controllerLock) {
+	                  // do this check only if the broker is live and there are no partitions being reassigned currently
+	                  // and preferred replica election is not in progress
+	                  if (controllerContext.liveBrokerIds.contains(leaderBroker) &&
+	                      controllerContext.partitionsBeingReassigned.size == 0 &&
+	                      controllerContext.partitionsUndergoingPreferredReplicaElection.size == 0 &&
+	                      !deleteTopicManager.isTopicQueuedUpForDeletion(topicPartition.topic) &&
+	                      controllerContext.allTopics.contains(topicPartition.topic)) {
+	                    //重新选择leader
+	                    onPreferredReplicaElection(Set(topicPartition), true)
+	                  }
+	                }
+	              }
+	            }
+	          }
+	        }
+	      }
+	    }
+    }
+至此，broker被选举为controller（leader）之后的操作就全部完成了。下文会讲broker在某些情况下重新被选举为leader之后的一些操作。
